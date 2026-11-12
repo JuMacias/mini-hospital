@@ -10,7 +10,7 @@ Juego web casual construido con React, TypeScript, Vite, Tailwind CSS, Zustand y
 ## Ejecutar en desarrollo
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -22,7 +22,10 @@ Abre la URL que imprime Vite (normalmente `http://localhost:5173`).
 npm run build
 npm run lint
 npm test
+npm run test:e2e
 ```
+
+`npm run test:e2e` requiere Chromium de Playwright. Instálalo una vez con `npx playwright install chromium`. Para probar los mismos recorridos contra el build local, ejecuta primero `npm run build` y después `PLAYWRIGHT_USE_PREVIEW=1 npm run test:e2e`. `npm run test:economy` ejecuta las pruebas aisladas de economía.
 
 ## Funcionalidades actuales
 
@@ -39,42 +42,57 @@ La aplicación guarda los datos con Zustand persist bajo la clave `mini-hospital
 
 Las escenas de cirugía y hospital se cargan de forma diferida y destruyen sus instancias al salir. La compilación de producción separa las páginas de juego del bundle inicial; el módulo Phaser sigue siendo un chunk monolítico de ~1.19 MB (~318 kB gzip). Vite mantiene visible la advertencia del chunk >500 kB: no se eleva el umbral para ocultarla. La primera apertura de cada escena descarga el motor si aún no está en caché.
 
-## Estructura
+## Arquitectura y estructura
 
-- `src/App.tsx`: navegación y pantallas originales, con acceso al flujo preoperatorio.
-- `src/components/CharacterCreatorPage.tsx`: editor de personaje, controles de identidad, categorías, aleatorización y guardado.
-- `src/components/TeamPage.tsx`, `TeamPage.css` y `TeamPageMotion.css`: catálogo visual, formación, roles, compatibilidad, ficha, personalización y progresión profesional.
-- `src/components/HospitalPage.tsx` y `HospitalPage.css`: mapa/controles, cola de atención, misiones, colocación de muebles, panel de habitaciones y compras.
-- `src/components/CharacterRenderer.tsx`: renderizador SVG reutilizable del personaje por capas.
-- `src/components/CharacterPreview.tsx`, `CustomizationCategories.tsx` y `CustomizationGrid.tsx`: vista previa y controles del editor.
-- `src/components/Avatar.tsx`: avatar reutilizable para la interfaz.
-- `src/components/Avatar.css`: estilos y animaciones de interfaz del avatar.
-- `src/components/AudioSettings.tsx`: activación de audio y controles independientes de volumen.
-- `src/game/AudioManager.ts`: síntesis local de música ambiental y efectos, iniciada bajo gesto explícito.
-- `src/components/PreopFlow.tsx`, `PreopFlow.css` y `PreopConversation.css`: catálogo, conversación ramificada y emocional, consentimiento y preparación.
-- `src/components/SurgeryPage.tsx` y `SurgeryNarrative.css`: muestran el contexto emocional del paciente en cirugía sin conectarlo a las reglas de estabilidad.
-- `src/components/SurgeryPage.tsx`: ciclo de vida de Phaser, ajustes e integración con el estado del juego.
-- `src/components/SurgeryHUD.tsx`, `SurgeryResults.tsx` y `SurgeryResults.css`: minijuegos, eventos y resumen de resultados con avisos de subida de nivel.
-- `src/game/SurgeryScene.ts`: escena Phaser con escenario isométrico, personajes y equipamiento vectoriales.
-- `src/game/HospitalScene.ts`: escena Phaser independiente para explorar el hospital, mobiliario configurable, pacientes y personajes animados.
-- `src/game/CharacterSprite.ts` y `src/game/characterVisuals.ts`: generador visual por capas para Phaser, poses, movimientos cortos y clasificación visual de estados.
-- `src/game/CharacterOptions.ts` y `src/game/characterRules.ts`: opciones, normalización, aleatorización y migración de apariencia.
-- `src/game/teamRules.ts` y `teamRules.test.ts`: validación de roles, compatibilidad determinista, progreso, energía y perfiles del equipo.
-- `src/game/hospitalRules.ts`, `hospitalOperations.ts`, `hospitalRules.test.ts`, `hospitalOperations.test.ts` y `hospitalStore.test.ts`: progresión, transiciones de atención, misiones, colocación de muebles, compras, mejoras, saldo y persistencia del hospital.
-- `src/game/assets/assetManifest.ts`: estado y procedencia/licencia de recursos gráficos y de audio.
-- `src/game/SurgeryEngine.ts` y `surgeryRules.ts`: máquina de estados y reglas puras de cirugía.
-- `src/game/surgeryRules.test.ts`: pruebas automatizadas de transiciones, complicaciones, desenlaces y persistencia.
-- `src/data/`: catálogo tipado de profesionales, pacientes y tareas.
-- `src/game/preopRules.ts`: reglas puras de ramificación, evaluación local, emoción, consentimiento y progreso; `src/data/patients.ts` define los diálogos ficticios.
-- `src/game/preopRules.test.ts`, `characterRules.test.ts`, `visualSystems.test.ts` y `src/game/surgeryRules.test.ts`: pruebas automatizadas de reglas, migración/persistencia, sistemas visuales, transiciones, complicaciones, desenlaces y persistencia.
-- `src/store/gameStore.ts`: estado Zustand persistido.
-- `src/types.ts`: modelos del juego.
+La organización existente ya separa presentación, reglas, escenas, catálogos y estado. Se conserva para evitar movimientos de archivos y cambios innecesarios en los imports:
+
+```text
+src/
+├── App.tsx, main.tsx       # Arranque, navegación interna y composición de pantallas
+├── components/             # Pantallas React, controles, vistas y estilos asociados
+├── data/                   # Catálogos tipados de pacientes, profesionales y tareas
+├── game/
+│   ├── *Rules.ts           # Reglas y cálculos del dominio
+│   ├── *Engine.ts          # Ciclos de vida y coordinación de mecánicas
+│   ├── *Scene.ts           # Escenas Phaser (hospital y quirófano)
+│   ├── Character*.ts       # Representación visual de personajes en Phaser
+│   └── assets/             # Inventario/procedencia de recursos gráficos y audio
+├── store/gameStore.ts      # Estado Zustand, acciones y persistencia/migraciones
+├── types.ts                # Tipos compartidos del dominio
+└── assets/                 # Recursos estáticos importados por el cliente
+e2e/                        # Recorridos Playwright (*.pw.ts)
+```
+
+### Límites entre módulos
+
+- `App.tsx` mantiene la navegación mediante estado React; no hay router ni rutas URL internas.
+- `components/` presenta el juego y conecta eventos de usuario con acciones del store. Las páginas de Hospital y Surgery cargan Phaser bajo demanda y liberan la instancia al salir.
+- `game/` contiene reglas, motores y escenas. Las escenas gestionan objetos visuales temporales; no son el almacenamiento de la partida.
+- `data/` contiene catálogos tipados y `types.ts` comparte modelos entre capas.
+- `store/gameStore.ts` es la frontera persistente: Zustand usa `localStorage`, clave `mini-hospital-save` y versión de esquema 6, con migraciones de partidas anteriores. No se persisten instancias Phaser, temporizadores ni objetos de audio.
+- Mantén las reglas de dominio independientes de React y Phaser; la UI accede al estado mediante el store y las escenas se conectan mediante las páginas y eventos existentes.
+
+### Pruebas
+
+- Reglas y persistencia: `src/game/*.test.ts`, ejecutadas con Vitest mediante `npm test`.
+- Economía: `npm run test:economy`, con almacenamiento aislado.
+- Flujos de navegador: `e2e/*.pw.ts`, ejecutados con Playwright mediante `npm run test:e2e` (7 escenarios Chromium).
+- Build y lint: `npm run build` (TypeScript + Vite) y `npm run lint` (Oxlint).
+
+### Versiones y documentación
+
+- `package.json` y `package-lock.json` describen y fijan las dependencias; el paquete conserva actualmente la versión `0.0.0` y no se ha publicado una versión etiquetada.
+- `RELEASE-1.0.md` documenta el estado candidato, las verificaciones, limitaciones y pasos de publicación. No implica que haya una publicación o tag Git.
+- Al aprobar una versión, actualiza `version` en ambos archivos con SemVer y crea el tag correspondiente como parte del proceso de release autorizado.
+- La arquitectura y guía de desarrollo están en este README; el estado del lanzamiento se mantiene por separado en `RELEASE-1.0.md`.
 
 ## Recursos gráficos y audio
 
 Los personajes de Phaser y los avatares de interfaz se componen de capas vectoriales originales; el editor y la vista previa usan SVG para dibujar por separado el rostro, tono de piel, cabello, uniforme, gorros, gafas, barba y accesorios. La escena Phaser reutiliza el sistema visual por capas y anima poses básicas de idle, walk, work, talk, alert, happy y sad. Son ilustraciones vectoriales procedurales de prototipo, no sprites ni animaciones finales. Los atlases finales de personajes/pacientes y el arte final de entorno siguen pendientes y requieren verificación de licencia antes de incorporarse.
 
 El inventario verificable de recursos está en `src/game/assets/assetManifest.ts`; diferencia los placeholders disponibles de sprites y paquetes de arte pendientes. El audio se sintetiza localmente con Web Audio, no carga archivos externos y permanece apagado hasta que la persona jugadora lo active explícitamente desde Configuración. Música y efectos tienen volumen independiente y sus preferencias se guardan en localStorage. No se almacenan objetos de audio ni de Phaser en Zustand.
+
+`src/assets/hero.png`, `src/assets/react.svg` y `src/assets/vite.svg` están en el repositorio, pero no se encontraron referencias desde el código de la aplicación; deben revisarse antes de reutilizarlos o eliminarlos. El manifiesto de assets registra explícitamente qué arte final sigue pendiente y requiere comprobar procedencia/licencia antes de añadirlo.
 
 El diseño prioriza la vista horizontal en móviles. En orientación vertical se muestra una indicación para girar el dispositivo; no se fuerza el bloqueo de orientación del navegador.
 
