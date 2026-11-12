@@ -314,6 +314,151 @@
   filter: brightness(0.78) saturate(0.82);
 }
 
+.app-shell.night-mode .creator-preview-panel,
+.app-shell.night-mode .creator-categories,
+.app-shell.night-mode .creator-options-panel {
+  background: #2c3338;
+  border-color: #454e54;
+}
+
+.app-shell.night-mode .creator-preview-panel {
+  background: radial-gradient(ellipse at 50% 44%, #324b47 0, #2d3a38 36%, #262e33 78%);
+}
+
+.app-shell.night-mode .creator-halo {
+  background: radial-gradient(circle, #3a4a48 0%, #2c3c3a 47%, #26343a 74%, transparent 75%);
+  opacity: 0.6;
+}
+
+.app-shell.night-mode .creator-floor {
+  background: #3a4c49;
+  box-shadow: 0 0 0 9px #3a4c495c, 0 0 30px 11px #2e3a3973;
+}
+
+.app-shell.night-mode .creator-preview-label {
+  background: #3d454b;
+  border-color: #4e575d;
+  color: #a4e9cf;
+}
+
+.app-shell.night-mode .creator-preview-caption {
+  border-top-color: #454e54;
+  background: #2c3338cc;
+}
+
+.app-shell.night-mode .creator-preview-caption span {
+  color: #e4eaec;
+}
+
+.app-shell.night-mode .creator-preview-caption small {
+  color: #a7bab4;
+}
+
+.app-shell.night-mode .creator-name input {
+  background: #373f45;
+  border-color: #4a545b;
+  color: #e4eaec;
+}
+
+.app-shell.night-mode .creator-gender {
+  background: #373f45;
+}
+
+.app-shell.night-mode .creator-gender button {
+  color: #a9b6ba;
+}
+
+.app-shell.night-mode .creator-gender button.gender-selected {
+  background: #4a545b;
+  color: #8fd9b9;
+}
+
+.app-shell.night-mode .creator-category {
+  color: #a9b6ba;
+}
+
+.app-shell.night-mode .creator-category:hover {
+  background: #343c41;
+}
+
+.app-shell.night-mode .creator-category.category-active {
+  background: #30433d;
+  border-color: #5fae93;
+  color: #a4e9cf;
+}
+
+.app-shell.night-mode .creator-options-header {
+  border-bottom-color: #454e54;
+}
+
+.app-shell.night-mode .creator-options-header h2 {
+  color: #e4eaec;
+}
+
+.app-shell.night-mode .creator-options-kicker {
+  color: #8fcdb6;
+}
+
+.app-shell.night-mode .creator-option-count {
+  background: #3d454b;
+  color: #bac8cb;
+}
+
+.app-shell.night-mode .creator-option-heading h3 {
+  color: #c7d4d6;
+}
+
+.app-shell.night-mode .creator-option-heading span {
+  background: #3d454b;
+  color: #bac8cb;
+}
+
+.app-shell.night-mode .creator-option {
+  background: #373f45;
+  border-color: #4a545b;
+}
+
+.app-shell.night-mode .creator-option:hover {
+  border-color: #73c4ac;
+  box-shadow: 0 5px 16px #0005;
+}
+
+.app-shell.night-mode .creator-option.option-selected {
+  border-color: #52cf7c;
+  background: #2a3b2e;
+  box-shadow: 0 0 0 2px #52cf7c30;
+}
+
+.app-shell.night-mode .option-character {
+  background: radial-gradient(circle at 50% 35%, #3c524b 0, #2d3a38 73%);
+}
+
+.app-shell.night-mode .option-label {
+  color: #c7d4d6;
+}
+
+.app-shell.night-mode .option-selected .option-label {
+  color: #8fd9b9;
+}
+
+.app-shell.night-mode .option-color {
+  border-color: #2c3338;
+}
+
+.app-shell.night-mode .creator-back {
+  background: #373f45;
+  color: #c7d4d6;
+}
+
+.app-shell.night-mode .creator-random {
+  background: #423a2c;
+  color: #e3bf72;
+}
+
+.app-shell.night-mode .creator-saved-status {
+  color: #a9b6ba;
+}
+
 .appearance-card {
   max-width: 680px;
   margin-top: 20px;
