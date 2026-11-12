@@ -26,6 +26,7 @@ import {
   removeHospitalFurniture as removeFurniture,
   transitionPatientCase,
   upsertHospitalFurniture,
+  ensureImmediateArrival,
 } from '../game/hospitalOperations'
 import type { AudioPreferences, BleedingIntensity, ConversationEmotion, ConversationEntry, Doctor, HospitalFurniturePlacement, HospitalRoomId, PatientCareStatus, Role, StaffProfile, SurgeryDifficulty, SurgeryResult, SurgeryState } from '../types'
 
@@ -52,6 +53,7 @@ interface GameStore {
   coins: number
   hospital: import('../types').HospitalState
   audioPreferences: AudioPreferences
+  nightMode: boolean
   setDoctor: (doctor: Doctor) => void
   setSelectedStaff: (ids: string[]) => void
   setRoleAssignments: (assignments: Partial<Record<Role, string>>) => void
@@ -73,12 +75,14 @@ interface GameStore {
   restartSurgery: () => void
   recordSurgeryResult: (result: SurgeryResult) => void
   setAudioPreferences: (preferences: AudioPreferences) => void
+  setNightMode: (nightMode: boolean) => void
   selectHospitalRoom: (roomId: HospitalRoomId) => void
   purchaseHospitalRoom: (roomId: HospitalRoomId) => boolean
   purchaseHospitalItem: (roomId: HospitalRoomId, itemId: string) => boolean
   installHospitalItem: (roomId: HospitalRoomId, itemId: string) => boolean
   uninstallHospitalItem: (roomId: HospitalRoomId, itemId: string) => boolean
   upgradeHospitalRoom: (roomId: HospitalRoomId) => boolean
+  movePatientToRoom: (patientId: string, roomId: HospitalRoomId) => boolean
   setPatientCareStatus: (patientId: string, status: PatientCareStatus) => boolean
   claimHospitalMission: (missionId: string) => boolean
   placeHospitalFurniture: (placement: HospitalFurniturePlacement) => boolean
@@ -96,11 +100,19 @@ function migratedHospital(
   hospital: Partial<import('../types').HospitalState> | undefined,
   experience: number,
 ): import('../types').HospitalState {
+  const defaults = createInitialPlayerHospital(experience)
+  const careQueue = ensureImmediateArrival(
+    hospital?.careQueue ?? createInitialCareQueue(patients.map(patient => patient.id)),
+  )
   return {
-    ...createInitialPlayerHospital(experience),
+    ...defaults,
     ...hospital,
-    careQueue: hospital?.careQueue ?? createInitialCareQueue(patients.map(patient => patient.id)),
+    unlockedRooms: [...new Set([...(hospital?.unlockedRooms ?? defaults.unlockedRooms), 'review' as const])],
+    roomLevels: { ...defaults.roomLevels, ...hospital?.roomLevels },
+    decorations: { ...defaults.decorations, ...hospital?.decorations },
+    careQueue,
     claimedMissionIds: hospital?.claimedMissionIds ?? [],
+    patientLocations: hospital?.patientLocations ?? {},
     furniture: hospital?.furniture ?? [],
   }
 }
@@ -130,6 +142,7 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
   coins: 0,
   hospital: createInitialPlayerHospital(),
   audioPreferences: { musicVolume: 0.2, effectsVolume: 0.35 },
+  nightMode: false,
   setDoctor: (doctor) => set({ doctor, saved: { doctor: false, team: false } }),
   setSelectedStaff: (selectedStaff) => set(state => ['IN_PROGRESS', 'COMPLICATION', 'STABILIZED'].includes(state.surgery.status)
     ? state
@@ -272,6 +285,7 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
     }
   }),
   setAudioPreferences: (audioPreferences) => set({ audioPreferences }),
+  setNightMode: (nightMode) => set({ nightMode }),
   selectHospitalRoom: (selectedRoom) => set(state => ({ hospital: { ...state.hospital, selectedRoom } })),
   purchaseHospitalRoom: (roomId) => {
     let purchased = false
@@ -391,9 +405,27 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
       const careQueue = transitionPatientCase(state.hospital.careQueue, patientId, status)
       if (!careQueue) return state
       updated = true
-      return { hospital: { ...state.hospital, careQueue } }
+      const patientLocations = { ...state.hospital.patientLocations }
+      if (status !== 'waiting') delete patientLocations[patientId]
+      return { hospital: { ...state.hospital, careQueue, patientLocations } }
     })
     return updated
+  },
+  movePatientToRoom: (patientId, roomId) => {
+    let moved = false
+    set(state => {
+      const care = state.hospital.careQueue.find(item => item.patientId === patientId)
+      if (care?.status !== 'waiting' || (roomId !== 'waiting' && roomId !== 'review')
+        || !state.hospital.unlockedRooms.includes(roomId)) return state
+      moved = true
+      return {
+        hospital: {
+          ...state.hospital,
+          patientLocations: { ...state.hospital.patientLocations, [patientId]: roomId },
+        },
+      }
+    })
+    return moved
   },
   claimHospitalMission: (missionId) => {
     let claimed = false
@@ -457,7 +489,7 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
   },
   }), {
     name: 'mini-hospital-save',
-    version: 6,
+    version: 8,
     migrate: (persistedState, version) => {
       const state = persistedState as Partial<GameStore>
       const migrated = version < 2
@@ -468,6 +500,7 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
         : { ...migrated, staffProfiles: migrated.staffProfiles ?? {}, favoriteTeam: migrated.favoriteTeam ?? [] }
       if (version >= 5) return {
         ...withTeam,
+        nightMode: withTeam.nightMode ?? false,
         coins: withTeam.coins ?? withTeam.rewards ?? 0,
         hospital: migratedHospital(withTeam.hospital, withTeam.experience ?? 0),
       }
@@ -478,6 +511,7 @@ export function createGameStore(storage: StateStorage | undefined = typeof windo
       const savedPatient = patients.find(patient => patient.id === withTeam.selectedPatient)
       return {
         ...withTeam,
+        nightMode: withTeam.nightMode ?? false,
         conversation,
         understanding: withTeam.understanding ?? (withTeam.consent ? 65 : conversation.reduce((total, entry) => total + (entry.comprehensionDelta ?? 0), 0)),
         patientEmotion: withTeam.patientEmotion ?? (savedPatient ? initialPatientEmotion(savedPatient.emotion) : 'neutral'),

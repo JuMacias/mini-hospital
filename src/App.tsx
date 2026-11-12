@@ -1,5 +1,5 @@
 import { lazy, Suspense, useState } from 'react'
-import { ArrowRight, Bell, BriefcaseMedical, Check, ChevronRight, CircleHelp, ClipboardCheck, Heart, Hospital, Menu, Settings, ShieldCheck, Sparkles, Users, X } from 'lucide-react'
+import { ArrowRight, Bell, BriefcaseMedical, Check, ChevronRight, CircleHelp, ClipboardCheck, Heart, Hospital, Menu, Moon, Settings, ShieldCheck, Sparkles, Sun, Users, X } from 'lucide-react'
 import { useGameStore } from './store/gameStore'
 import { isValidTeam } from './game/teamRules'
 import type { Doctor } from './types'
@@ -11,6 +11,7 @@ import { TeamPage } from './components/TeamPage'
 import { GameTutorial } from './components/GameTutorial'
 import { audioManager } from './game/AudioManager'
 import './App.css'
+import './night-mode.css'
 
 const SurgeryPage = lazy(() => import('./components/SurgeryPage').then(module => ({ default: module.SurgeryPage })))
 const HospitalPage = lazy(() => import('./components/HospitalPage').then(module => ({ default: module.HospitalPage })))
@@ -18,7 +19,7 @@ type Screen = 'home' | 'doctor' | 'team' | 'preop' | 'surgery' | 'hospital' | 's
 const defaultDoctor: Doctor = { name: 'Dra. Alex', gender: 'doctora', skin: '#bd8065', hair: '#47302c', eyes: '#536d69', uniform: '#63c9bd', accessory: 'gorra' }
 
 function App() {
-  const { doctor, setDoctor, selectedStaff, roleAssignments, saved, save, clearPatientSelection, beginPreop } = useGameStore()
+  const { doctor, setDoctor, selectedStaff, roleAssignments, saved, save, clearPatientSelection, beginPreop, nightMode, setNightMode } = useGameStore()
   const [screen, setScreen] = useState<Screen>('home')
   const [mobileNav, setMobileNav] = useState(false)
   const [toast, setToast] = useState('')
@@ -36,10 +37,10 @@ function App() {
     <button className={`nav-item ${screen === 'hospital' ? 'active' : ''}`} onClick={() => go('hospital')}><BriefcaseMedical /> Mi hospital</button>
     <div className="sidebar-bottom"><div className="help-card"><div className="help-icon"><CircleHelp size={17} /></div><strong>¿Necesitas ayuda?</strong><span>Tu aventura empieza aquí.</span><button onClick={() => setTutorialOpen(true)}>Ver guía <ArrowRight size={14} /></button></div><button className={`nav-item muted ${screen === 'settings' ? 'active' : ''}`} onClick={() => go('settings')}><Settings /> Configuración</button><div className="profile-mini"><Avatar color={currentDoctor.uniform} hair={currentDoctor.hair} skin={currentDoctor.skin} accessory={currentDoctor.accessory} hairStyle={currentDoctor.hairStyle} gender={currentDoctor.gender} customization={currentDoctor} /><div><b>{currentDoctor.name}</b><span>{currentDoctor.gender === 'doctor' ? 'Doctor principal' : 'Doctora principal'}</span></div><ChevronRight size={16} /></div></div>
   </>
-  return <div className="app-shell">
+  return <div className={`app-shell ${nightMode ? 'night-mode' : ''} ${screen === 'surgery' ? 'surgery-screen' : ''}`}>
     <aside className={`sidebar ${mobileNav ? 'sidebar-open' : ''}`}><div className="brand"><div className="brand-mark"><Heart size={20} fill="white" /></div><div><b>mini<span>hospital</span></b><small>PEQUEÑOS CUIDADOS, GRANDES HAZAÑAS</small></div><button className="close-nav" onClick={() => setMobileNav(false)}><X size={20} /></button></div>{nav}</aside>
     {mobileNav && <button className="nav-scrim" onClick={() => setMobileNav(false)} aria-label="Cerrar menú" />}
-    <main className="main-area"><header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Abrir menú"><Menu /></button><div className="crumb">Mini Hospital <ChevronRight size={14} /> <b>{screen === 'home' ? 'Inicio' : screen === 'doctor' ? 'Mi personaje' : screen === 'team' ? 'Equipo médico' : screen === 'preop' ? 'Atención preoperatoria' : screen === 'surgery' ? 'Quirófano' : screen === 'hospital' ? 'Mi Hospital' : 'Configuración'}</b></div><div className="top-right"><span className="online"><i /> Guardado en este dispositivo</span><button className="icon-btn" aria-label="Notificaciones" onClick={() => flash('No tienes notificaciones nuevas.')}><Bell size={18} /></button><span className="top-avatar"><Avatar color={currentDoctor.uniform} hair={currentDoctor.hair} skin={currentDoctor.skin} accessory={currentDoctor.accessory} hairStyle={currentDoctor.hairStyle} gender={currentDoctor.gender} customization={currentDoctor} /></span></div></header>
+    <main className="main-area"><header className="topbar"><button className="mobile-menu" onClick={() => setMobileNav(true)} aria-label="Abrir menú"><Menu /></button><div className="crumb">Mini Hospital <ChevronRight size={14} /> <b>{screen === 'home' ? 'Inicio' : screen === 'doctor' ? 'Mi personaje' : screen === 'team' ? 'Equipo médico' : screen === 'preop' ? 'Atención preoperatoria' : screen === 'surgery' ? 'Quirófano' : screen === 'hospital' ? 'Mi Hospital' : 'Configuración'}</b></div><div className="top-right"><span className="online"><i /> Guardado en este dispositivo</span><button type="button" className="icon-btn theme-toggle" aria-label={nightMode ? 'Cambiar a tema claro (blanco)' : 'Cambiar a tema oscuro (negro)'} title={nightMode ? 'Tema oscuro: cambiar a claro' : 'Tema claro: cambiar a oscuro'} aria-pressed={nightMode} onClick={() => setNightMode(!nightMode)}>{nightMode ? <Sun size={18} /> : <Moon size={18} />}</button><button className="icon-btn" aria-label="Notificaciones" onClick={() => flash('No tienes notificaciones nuevas.')}><Bell size={18} /></button><span className="top-avatar"><Avatar color={currentDoctor.uniform} hair={currentDoctor.hair} skin={currentDoctor.skin} accessory={currentDoctor.accessory} hairStyle={currentDoctor.hairStyle} gender={currentDoctor.gender} customization={currentDoctor} /></span></div></header>
       {screen === 'home' && <section className="page home-page">
         <div className="welcome-line"><div><div className="eyebrow"><span className="sparkle">✳</span> TU PRÓXIMA GRAN AVENTURA</div><h1>¡Hola, {currentDoctor.name.replace(/^(Dra?\.?\s*)/i, '')}!</h1><p className="subtitle">Tu hospital está listo para hacer cosas increíbles.</p></div><span className="date-pill">✦ &nbsp;Un día perfecto para cuidar</span></div>
         <div className="hero-card"><div className="hero-copy"><span className="hero-kicker">BIENVENIDA AL EQUIPO</span><h2>¡Cada gran historia<br />comienza con cuidado!</h2><p>Prepara tu equipo, conoce a tus colegas<br className="desktop-break" /> y conviértete en la heroína de cada día.</p><button className="primary-btn" onClick={() => go('team')}>Preparar mi equipo <ArrowRight size={17} /></button><div className="hero-note"><ShieldCheck size={16} /> Un espacio seguro para aprender y jugar</div></div>

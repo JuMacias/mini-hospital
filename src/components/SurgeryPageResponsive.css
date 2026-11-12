@@ -7,6 +7,66 @@
   background: #f6eadb;
 }
 
+.surgery-display-controls {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 8;
+  display: grid;
+  justify-items: end;
+  gap: 5px;
+}
+
+.surgery-fullscreen-button {
+  min-height: 34px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid #fff9;
+  border-radius: 9px;
+  padding: 0 10px;
+  background: #fffc;
+  color: #42645b;
+  font-size: 10px;
+  font-weight: 800;
+  box-shadow: 0 3px 12px #334e4020;
+}
+
+.surgery-display-controls [role="alert"] {
+  max-width: min(280px, calc(100vw - 24px));
+  border-radius: 7px;
+  padding: 6px 8px;
+  background: #fff3ef;
+  color: #9c514f;
+  font-size: 9px;
+}
+
+.surgery-page:fullscreen {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  width: 100vw;
+  max-width: none;
+  height: 100vh;
+  height: 100dvh;
+  overflow: auto;
+  padding: max(8px, env(safe-area-inset-top)) max(8px, env(safe-area-inset-right)) max(8px, env(safe-area-inset-bottom)) max(8px, env(safe-area-inset-left));
+  background: #f7faf9;
+}
+
+.surgery-page:fullscreen .surgery-workspace {
+  min-height: 0;
+}
+
+.surgery-page:fullscreen .surgery-visual,
+.surgery-page:fullscreen .surgery-scene-host {
+  min-height: 0;
+}
+
+.surgery-page:fullscreen .surgery-control-panel {
+  max-height: none;
+}
+
 @media (max-width: 760px) and (orientation: portrait) {
   .portrait-orientation {
     inset: auto auto 9px 9px;
@@ -33,6 +93,199 @@
   }
 
   .portrait-orientation small {
+    display: block;
+    font: 700 8px Nunito, sans-serif;
+  }
+}
+
+@media (max-width: 760px) and (orientation: landscape) {
+  .surgery-fullscreen-button {
+    min-height: 38px;
+    padding-inline: 12px;
+    font-size: 11px;
+  }
+
+  .surgery-page:fullscreen {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: max(5px, env(safe-area-inset-top)) max(7px, env(safe-area-inset-right)) max(5px, env(safe-area-inset-bottom)) max(7px, env(safe-area-inset-left));
+  }
+
+  .surgery-page:fullscreen .back-link,
+  .surgery-page:fullscreen .surgery-safety,
+  .surgery-page:fullscreen .difficulty-footnote {
     display: none;
   }
+
+  .surgery-page:fullscreen .surgery-page-heading {
+    flex: 0 0 auto;
+    margin: 0 0 5px;
+  }
+
+  .surgery-page:fullscreen .surgery-page-heading h1 {
+    font-size: 17px;
+  }
+
+  .surgery-page:fullscreen .surgery-workspace {
+    flex: 1;
+    grid-template-columns: minmax(0, 1.35fr) minmax(245px, 0.9fr);
+    gap: 7px;
+    min-height: 0;
+  }
+
+  .surgery-page:fullscreen .surgery-visual,
+  .surgery-page:fullscreen .surgery-scene-host {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .surgery-page:fullscreen .surgery-control-panel {
+    min-height: 0;
+    padding: 8px;
+  }
+}
+
+@media (max-width: 900px) and (orientation: landscape) {
+  .app-shell.surgery-screen {
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+  }
+
+  .app-shell.surgery-screen .sidebar,
+  .app-shell.surgery-screen .topbar,
+  .app-shell.surgery-screen .footer {
+    display: none;
+  }
+
+  .app-shell.surgery-screen .main-area {
+    height: 100%;
+    min-height: 0;
+    margin-left: 0;
+    overflow: hidden;
+  }
+
+  .app-shell.surgery-screen .surgery-page {
+    width: 100%;
+    max-width: none;
+    height: 100%;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 5px 8px;
+  }
+
+  .app-shell.surgery-screen .surgery-page .back-link {
+    flex: 0 0 auto;
+    align-self: flex-start;
+    padding: 2px 5px;
+    font-size: 8px;
+  }
+
+  .app-shell.surgery-screen .surgery-page-heading {
+    flex: 0 0 auto;
+    margin: 0 0 4px;
+  }
+
+  .app-shell.surgery-screen .surgery-page-heading h1 {
+    font-size: 17px;
+  }
+
+  .app-shell.surgery-screen .surgery-workspace {
+    flex: 1;
+    grid-template-columns: minmax(0, 1.35fr) minmax(245px, 0.9fr);
+    gap: 7px;
+    min-height: 0;
+  }
+
+  .app-shell.surgery-screen .surgery-visual,
+  .app-shell.surgery-screen .surgery-scene-host {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .app-shell.surgery-screen .surgery-control-panel {
+    min-height: 0;
+    max-height: 100%;
+    padding: 8px;
+  }
+
+  .app-shell.surgery-screen .surgery-safety,
+  .app-shell.surgery-screen .difficulty-footnote {
+    display: none;
+  }
+}
+
+.surgery-rule-note {
+  margin: -4px 0 0;
+  color: #806b4e;
+  font-size: 8px;
+  line-height: 1.4;
+}
+
+.surgery-workspace-terminal {
+  align-items: start;
+}
+
+.surgery-workspace-terminal .surgery-visual {
+  align-self: start;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: min(56vw, 62vh, 560px);
+  min-height: 0;
+}
+
+.surgery-workspace-terminal .surgery-scene-host {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+  min-height: 0;
+}
+
+.app-shell.surgery-screen .surgery-workspace-terminal .surgery-visual {
+  height: min(56vw, 62vh, 560px);
+}
+
+.app-shell.surgery-screen .surgery-workspace-terminal .surgery-scene-host {
+  position: absolute;
+  inset: 0;
+  width: auto;
+  height: auto;
+}
+
+.result-explanation {
+  margin: 10px auto;
+  max-width: 640px;
+  border: 1px solid #f0dfc8;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fffaf1;
+  color: #745f4b;
+  text-align: left;
+}
+
+.result-explanation b {
+  display: block;
+  margin-bottom: 4px;
+  color: #765a3e;
+  font-size: 10px;
+}
+
+.result-explanation p {
+  font-size: 9px;
+  line-height: 1.55;
+}
+
+.app-shell.night-mode .result-explanation {
+  border-color: #51493c;
+  background: #292a28;
+  color: #e3d6c1;
+}
+
+.app-shell.night-mode .result-explanation b {
+  color: #f0d7b4;
 }

@@ -93,7 +93,7 @@ describe('editor visual de personajes', () => {
       glassesStyle: 'round',
       hatStyle: 'none',
     })
-    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(6)
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
   })
 
   it('migra a perfiles de personal sin sobrescribir equipo ni asignaciones antiguas', async () => {
@@ -110,7 +110,7 @@ describe('editor visual de personajes', () => {
     expect(store.getState().roleAssignments).toEqual(roleAssignments)
     expect(store.getState().staffProfiles).toEqual({})
     expect(store.getState().favoriteTeam).toEqual([])
-    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(6)
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
   })
 
   it('guarda y vuelve a cargar la identidad, las capas y el género seleccionados', async () => {

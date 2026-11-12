@@ -22,6 +22,10 @@ const difficultyRisk: Record<SurgeryDifficulty, number> = { easy: 0.04, normal: 
 const difficultyDamage: Record<SurgeryDifficulty, number> = { easy: 9, normal: 15, hard: 23 }
 const complications: ComplicationType[] = ['monitor', 'instruments', 'team', 'bleeding']
 
+export function getSurgeryErrorPenalty(difficulty: SurgeryDifficulty): number {
+  return difficultyDamage[difficulty]
+}
+
 export function createInitialSurgeryState(
   patientId: string | null,
   difficulty: SurgeryDifficulty = 'normal',
@@ -101,7 +105,9 @@ export function resolveComplication(
   const score = Math.max(0, state.score + (resolvedWell ? 8 : -8))
   const teamPerformance = Math.max(0, Math.min(100, state.teamPerformance + (resolvedWell ? 5 : -10)))
   const updatedComplications = state.complications.map((item, index) => (
-    index === state.complications.length - 1 ? { ...item, resolved: true } : item
+    index === state.complications.length - 1
+      ? { ...item, resolved: true, resolution: resolvedWell ? 'good' as const : 'miss' as const }
+      : item
   ))
   return {
     ...state,

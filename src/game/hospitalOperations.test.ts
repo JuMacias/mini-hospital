@@ -3,6 +3,9 @@ import { createInitialHospitalState } from './hospitalRules'
 import {
   canPlaceHospitalFurniture,
   createInitialCareQueue,
+  createStaffMovementRoutes,
+  createStaffRouteToRoom,
+  ensureImmediateArrival,
   getHospitalMissionProgress,
   transitionPatientCase,
   upsertHospitalFurniture,
@@ -36,6 +39,41 @@ describe('flujo vivo del hospital', () => {
     expect(transitionPatientCase(resumed, 'missing', 'waiting')).toBeNull()
   })
 
+  it('marca una sola llegada inmediata y conserva su prioridad al iniciar atención', () => {
+    const queue = createInitialCareQueue(['tomas', 'luna'], 100)
+    expect(queue.map(item => item.priority ?? 'normal')).toEqual(['immediate', 'normal'])
+    const consultation = transitionPatientCase(queue, 'tomas', 'consultation', 110)!
+    expect(consultation[0].priority).toBe('immediate')
+    expect(ensureImmediateArrival(consultation)).toBe(consultation)
+  })
+
+  it('migra una llegada pendiente como inmediata y crea recorridos solo por espacios abiertos', () => {
+    const oldQueue = [{ id: 'case-1', patientId: 'alma', status: 'arrived' as const, arrivedAt: 1, updatedAt: 1 }]
+    expect(ensureImmediateArrival(oldQueue)[0].priority).toBe('immediate')
+
+    const routes = createStaffMovementRoutes(['reception', 'waiting', 'corridor'], 1)
+    expect(routes).toHaveLength(3)
+    expect(routes[0][0]).toEqual({ x: 600, y: 376 })
+    expect(routes[0]).toContainEqual({ x: 600, y: 285 })
+    expect(routes[0]).not.toContainEqual({ x: 1000, y: 285 })
+    expect(routes.every(route => route.at(-1)?.x === 600 && route.at(-1)?.y === 376)).toBe(true)
+  })
+
+  it('genera un recorrido seguro entre el pasillo y la habitación elegida', () => {
+    const route = createStaffRouteToRoom({ x: 520, y: 390 }, 'recovery')
+    expect(route[0]).toEqual({ x: 520, y: 390 })
+    expect(route).toContainEqual({ x: 600, y: 376 })
+    expect(route).toContainEqual({ x: 1000, y: 516 })
+    expect(route.at(-1)).toEqual({ x: 1000, y: 588 })
+  })
+
+  it('incluye una ruta desde el pasillo hasta la sala nueva de revisión', () => {
+    const route = createStaffRouteToRoom({ x: 520, y: 390 }, 'review')
+    expect(route).toContainEqual({ x: 400, y: 700 })
+    expect(route).toContainEqual({ x: 600, y: 780 })
+    expect(route.at(-1)).toEqual({ x: 600, y: 848 })
+  })
+
   it('desbloquea misiones a partir del estado real y no de progreso aleatorio', () => {
     const hospital = createInitialHospitalState()
     const queue = createInitialCareQueue(['alma'])
@@ -48,6 +86,8 @@ describe('flujo vivo del hospital', () => {
 
   it('rechaza colocar muebles fuera del piso, sobre puertas o encima de otros muebles', () => {
     const base = createInitialHospitalState()
+    const bedOwned = { ...base, unlockedItems: ['bed-cloud'] }
+    expect(canPlaceHospitalFurniture(bedOwned, 'review', 'bed-cloud', 600, 820)).toBe(true)
     const owned = { ...base, unlockedItems: ['chair-cloud'] }
     expect(canPlaceHospitalFurniture(owned, 'waiting', 'chair-cloud', 600, 200)).toBe(true)
     expect(canPlaceHospitalFurniture(owned, 'waiting', 'chair-cloud', 900, 235)).toBe(false)

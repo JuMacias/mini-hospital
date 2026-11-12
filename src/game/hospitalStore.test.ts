@@ -83,6 +83,22 @@ describe('persistencia y economía del hospital', () => {
     expect(store.getState().surgeryHistory).toHaveLength(1)
   })
 
+  it('traslada solo pacientes en espera a sala de revisión y conserva su ubicación', async () => {
+    const { storage } = memoryStorage()
+    const store = createGameStore(storage)
+    expect(store.getState().hospital.unlockedRooms).toContain('review')
+    expect(store.getState().movePatientToRoom('luna', 'review')).toBe(false)
+    expect(store.getState().setPatientCareStatus('luna', 'waiting')).toBe(true)
+    expect(store.getState().movePatientToRoom('luna', 'review')).toBe(true)
+    expect(store.getState().hospital.patientLocations.luna).toBe('review')
+
+    const restored = createGameStore(storage)
+    await restored.persist.rehydrate()
+    expect(restored.getState().hospital.patientLocations.luna).toBe('review')
+    expect(restored.getState().setPatientCareStatus('luna', 'consultation')).toBe(true)
+    expect(restored.getState().hospital.patientLocations.luna).toBeUndefined()
+  })
+
   it('migra las recompensas v4 al saldo y crea el hospital inicial sin perder progresión', async () => {
     const { storage, values } = memoryStorage()
     values.set('mini-hospital-save', JSON.stringify({
@@ -94,8 +110,8 @@ describe('persistencia y economía del hospital', () => {
     expect(store.getState().coins).toBe(47)
     expect(store.getState().experience).toBe(180)
     expect(store.getState().hospital.level).toBe(2)
-    expect(store.getState().hospital.unlockedRooms).toEqual(['reception', 'waiting', 'corridor'])
-    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(6)
+    expect(store.getState().hospital.unlockedRooms).toEqual(['reception', 'waiting', 'review', 'corridor'])
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
   })
 
   it('migra partidas v5 conservando habitaciones y añade cola y muebles por defecto', async () => {
@@ -119,7 +135,52 @@ describe('persistencia y economía del hospital', () => {
     expect(store.getState().hospital.careQueue).toHaveLength(5)
     expect(store.getState().hospital.furniture).toEqual([])
     expect(store.getState().hospital.claimedMissionIds).toEqual([])
-    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(6)
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
+  })
+
+  it('migra partidas v6 conservando los turnos y aplicando preferencias compatibles', async () => {
+    const { storage, values } = memoryStorage()
+    values.set('mini-hospital-save', JSON.stringify({
+      state: {
+        experience: 80,
+        hospital: {
+          level: 1, unlockedRooms: ['reception', 'waiting', 'corridor'], unlockedItems: [],
+          purchases: [], roomLevels: { reception: 1, waiting: 1, corridor: 1 },
+          decorations: {}, selectedRoom: 'waiting', coinsSpent: 0,
+          careQueue: [{ id: 'alma-case-1', patientId: 'alma', status: 'arrived', arrivedAt: 1, updatedAt: 1 }],
+        },
+      },
+      version: 6,
+    }))
+    const store = createGameStore(storage)
+    await store.persist.rehydrate()
+    expect(store.getState().nightMode).toBe(false)
+    expect(store.getState().hospital.careQueue[0]).toMatchObject({ patientId: 'alma', priority: 'immediate' })
+    expect(store.getState().hospital.unlockedRooms).toContain('review')
+    expect(store.getState().hospital.patientLocations).toEqual({})
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
+  })
+
+  it('migra partidas v7 y agrega la sala de revisión sin borrar el hospital', async () => {
+    const { storage, values } = memoryStorage()
+    values.set('mini-hospital-save', JSON.stringify({
+      state: {
+        experience: 80,
+        hospital: {
+          level: 1, unlockedRooms: ['reception', 'waiting', 'corridor'], unlockedItems: [],
+          purchases: [], roomLevels: { reception: 1, waiting: 1, corridor: 1 },
+          decorations: {}, selectedRoom: 'waiting', coinsSpent: 0,
+          careQueue: [{ id: 'alma-case-1', patientId: 'alma', status: 'waiting', arrivedAt: 1, updatedAt: 1 }],
+        },
+      },
+      version: 7,
+    }))
+    const store = createGameStore(storage)
+    await store.persist.rehydrate()
+    expect(store.getState().hospital.unlockedRooms).toContain('review')
+    expect(store.getState().hospital.roomLevels.review).toBe(1)
+    expect(store.getState().hospital.patientLocations).toEqual({})
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
   })
 
   it('transiciona del turno a consulta y recuperación y bloquea el alta tras un fallo', () => {

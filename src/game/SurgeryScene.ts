@@ -38,12 +38,13 @@ export class SurgeryScene extends Phaser.Scene {
 
   private createScene() {
     this.cameras.main.setBackgroundColor('#f6eadb')
-    this.cameras.main.setZoom(1.24)
+    this.cameras.main.setZoom(1.32)
     this.cameras.main.centerOn(500, 285)
     this.drawRoom()
     this.drawEquipment()
     this.drawBedAndPatient()
     this.drawTeam()
+    this.drawFirstPersonArms()
     this.drawLights()
     this.monitorGraphics = this.add.graphics().setDepth(10)
     this.stateListener = ({ status, phase }) => {
@@ -128,51 +129,55 @@ export class SurgeryScene extends Phaser.Scene {
     base.fillPoints([{ x: -160, y: -14 }, { x: 0, y: -76 }, { x: 160, y: -14 }, { x: 0, y: 48 }], true)
     base.fillStyle(0xfafdfb, 1)
     base.fillPoints([{ x: -145, y: -21 }, { x: 0, y: -76 }, { x: 145, y: -21 }, { x: 0, y: 34 }], true)
+    base.fillStyle(0xe2eee8, 1)
+    base.fillPoints([{ x: -91, y: 6 }, { x: 0, y: -34 }, { x: 91, y: 6 }, { x: 0, y: 48 }], true)
     base.fillStyle(color(this.people.patient.uniform), 1)
-    base.fillPoints([{ x: -81, y: -25 }, { x: 0, y: -57 }, { x: 81, y: -25 }, { x: 0, y: 8 }], true)
+    base.fillRoundedRect(-48, -39, 96, 65, 24)
+    base.fillStyle(0xf8e8d9, 0.9)
+    base.fillRoundedRect(-18, -38, 36, 10, 5)
     base.fillStyle(color(this.people.patient.skin), 1)
-    base.fillEllipse(0, -76, 35, 29)
+    base.fillEllipse(0, -78, 48, 40)
     base.fillStyle(color(this.people.patient.hair), 1)
     if (this.people.patient.hairStyle === 'curly') {
-      base.fillCircle(-13, -85, 8)
-      base.fillCircle(-5, -91, 8)
-      base.fillCircle(4, -91, 8)
-      base.fillCircle(13, -85, 8)
+      base.fillCircle(-19, -88, 10)
+      base.fillCircle(-7, -96, 10)
+      base.fillCircle(7, -96, 10)
+      base.fillCircle(19, -88, 10)
     } else {
-      base.fillEllipse(-4, -85, 32, 16)
+      base.fillEllipse(-4, -88, 42, 19)
       if (this.people.patient.hairStyle === 'long' || this.people.patient.hairStyle === 'bob') {
-        base.fillRoundedRect(-19, -86, 8, this.people.patient.hairStyle === 'long' ? 28 : 19, 4)
-        base.fillRoundedRect(9, -86, 8, this.people.patient.hairStyle === 'long' ? 28 : 19, 4)
+        base.fillRoundedRect(-26, -88, 10, this.people.patient.hairStyle === 'long' ? 34 : 24, 5)
+        base.fillRoundedRect(16, -88, 10, this.people.patient.hairStyle === 'long' ? 34 : 24, 5)
       }
-      if (this.people.patient.hairStyle === 'bun') base.fillCircle(-4, -96, 7)
+      if (this.people.patient.hairStyle === 'bun') base.fillCircle(-4, -102, 9)
     }
     if (this.people.patient.expression) {
       base.lineStyle(2, 0x9a5d69, 0.9)
       base.beginPath()
-      base.arc(0, -70, 5, Math.PI * 0.1, Math.PI * 0.9, false)
+      base.arc(0, -69, 7, Math.PI * 0.1, Math.PI * 0.9, false)
       base.strokePath()
     }
     if (this.people.patient.accessory === 'gorra' || this.people.patient.accessory === 'surgical-cap') {
       base.fillStyle(0xf8fbf8, 1)
-      base.fillRoundedRect(-17, -100, 34, 8, 4)
+      base.fillRoundedRect(-23, -105, 46, 10, 5)
       base.fillStyle(0x86c9b8, 1)
-      base.fillRect(-10, -94, 20, 2)
+      base.fillRect(-13, -94, 26, 2)
     } else if (this.people.patient.accessory === 'headband') {
       base.lineStyle(2, 0xf1c3a8, 1)
       base.beginPath()
-      base.arc(-1, -77, 18, Math.PI * 1.15, Math.PI * 1.85)
+      base.arc(-1, -78, 23, Math.PI * 1.15, Math.PI * 1.85)
       base.strokePath()
     } else if (this.people.patient.accessory === 'glasses') {
       base.lineStyle(1.5, 0x58736c, 1)
-      base.strokeCircle(-6, -75, 4)
-      base.strokeCircle(6, -75, 4)
-      base.lineBetween(-2, -75, 2, -75)
+      base.strokeCircle(-9, -76, 6)
+      base.strokeCircle(9, -76, 6)
+      base.lineBetween(-3, -76, 3, -76)
     }
     base.fillStyle(0x475f5a, 1)
-    base.fillCircle(-5, -75, 1.6)
-    base.fillCircle(5, -75, 1.6)
+    base.fillCircle(-8, -76, 2.4)
+    base.fillCircle(8, -76, 2.4)
     bed.add(base)
-    bed.add(this.add.text(0, 76, this.people.patient.name, { fontFamily: 'Nunito, sans-serif', fontSize: '11px', color: '#52756c', fontStyle: 'bold' }).setOrigin(0.5))
+    bed.add(this.add.text(0, 88, this.people.patient.name, { fontFamily: 'Nunito, sans-serif', fontSize: '11px', color: '#52756c', fontStyle: 'bold' }).setOrigin(0.5))
     this.tweens.add({ targets: bed, y: 326, duration: 1550, yoyo: true, repeat: -1, ease: 'Sine.easeInOut' })
     shadow.setDepth(1)
   }
@@ -186,16 +191,19 @@ export class SurgeryScene extends Phaser.Scene {
       team: 'EQUIPO MÉDICO',
     }
     const rolePositions: Record<string, { x: number; y: number }> = {
-      anesthesia: { x: 770, y: 303 },
-      instrument: { x: 325, y: 305 },
-      circulating: { x: 658, y: 426 },
-      assistant: { x: 360, y: 426 },
+      anesthesia: { x: 815, y: 303 },
+      instrument: { x: 245, y: 305 },
+      circulating: { x: 730, y: 421 },
+      assistant: { x: 270, y: 421 },
       team: { x: 650, y: 320 },
     }
-    const people = [
-      { ...this.people.doctor, name: this.people.doctor.name, role: 'CIRUGÍA PRINCIPAL', position: { x: 500, y: 229 }, roleKey: 'lead' },
-      ...this.people.team.map(({ person, role }) => ({ ...person, name: person.name, role: roleLabels[role] ?? roleLabels.team, position: rolePositions[role] ?? rolePositions.team, roleKey: role })),
-    ]
+    const people = this.people.team.map(({ person, role }) => ({
+      ...person,
+      name: person.name,
+      role: roleLabels[role] ?? roleLabels.team,
+      position: rolePositions[role] ?? rolePositions.team,
+      roleKey: role,
+    }))
     people.forEach((person) => {
       const { x, y } = person.position
       const character = new CharacterSprite(this, {
@@ -215,6 +223,24 @@ export class SurgeryScene extends Phaser.Scene {
       character.root.setDepth(y)
       this.characters.push(character)
     })
+  }
+
+  private drawFirstPersonArms() {
+    const g = this.add.graphics().setDepth(900)
+    g.lineStyle(78, color(this.people.doctor.uniform), 1)
+    g.lineBetween(185, 590, 390, 438)
+    g.lineBetween(815, 590, 610, 438)
+    g.fillStyle(color(this.people.doctor.uniform), 1)
+    g.fillCircle(185, 590, 39)
+    g.fillCircle(390, 438, 39)
+    g.fillCircle(815, 590, 39)
+    g.fillCircle(610, 438, 39)
+    g.lineStyle(23, 0xf7fbf8, 1)
+    g.lineBetween(387, 442, 411, 424)
+    g.lineBetween(613, 442, 589, 424)
+    g.fillStyle(color(this.people.doctor.skin), 1)
+    g.fillEllipse(426, 413, 33, 25)
+    g.fillEllipse(574, 413, 33, 25)
   }
 
   private drawLights() {

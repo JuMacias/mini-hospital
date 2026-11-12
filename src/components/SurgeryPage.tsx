@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Phaser from 'phaser'
-import { Activity, ArrowLeft, ArrowRight, Heart, ShieldAlert, Sparkles, Users } from 'lucide-react'
+import { Activity, ArrowLeft, ArrowRight, Heart, Maximize2, Minimize2, ShieldAlert, Sparkles, Users } from 'lucide-react'
 import { staff } from '../data/staff'
 import { patients } from '../data/patients'
 import { preparationTasks } from '../data/preparationTasks'
@@ -22,12 +22,16 @@ const difficultyLabels: Record<SurgeryDifficulty, string> = { easy: 'Fácil', no
 const bleedingLabels: Record<BleedingIntensity, string> = { off: 'Desactivado', soft: 'Suave', moderate: 'Moderado' }
 
 export function SurgeryPage({ onHome, onAnotherPatient }: { onHome: () => void; onAnotherPatient: () => void }) {
+  const pageHost = useRef<HTMLElement>(null)
   const sceneHost = useRef<HTMLDivElement>(null)
   const gameRef = useRef<Phaser.Game | null>(null)
   const resultRecorded = useRef<string | null>(null)
   const [sceneStatus, setSceneStatus] = useState<'loading' | 'ready' | 'error'>('loading')
   const [sceneError, setSceneError] = useState('')
   const [sceneRetry, setSceneRetry] = useState(0)
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [isLandscapeMobile, setIsLandscapeMobile] = useState(false)
+  const [fullscreenError, setFullscreenError] = useState('')
   const {
     doctor, selectedPatient, selectedStaff, roleAssignments, staffProfiles, consent, completedTasks, patientEmotion, trust,
     surgery, surgeryHistory, configureSurgery, beginSurgery, actInSurgery,
@@ -46,6 +50,38 @@ export function SurgeryPage({ onHome, onAnotherPatient }: { onHome: () => void; 
   const terminal = surgery.status === 'SUCCESS' || surgery.status === 'FAILURE'
   const teamReady = isValidTeam(selectedStaff, roleAssignments)
   const mayStart = canStartSurgery(consent, completedTasks, preparationTasks) && teamReady
+
+  useEffect(() => {
+    const landscapeQuery = window.matchMedia('(max-width: 760px) and (orientation: landscape)')
+    const updateDisplayState = () => {
+      setIsFullscreen(document.fullscreenElement === pageHost.current)
+      setIsLandscapeMobile(landscapeQuery.matches)
+    }
+    updateDisplayState()
+    document.addEventListener('fullscreenchange', updateDisplayState)
+    landscapeQuery.addEventListener('change', updateDisplayState)
+    return () => {
+      document.removeEventListener('fullscreenchange', updateDisplayState)
+      landscapeQuery.removeEventListener('change', updateDisplayState)
+    }
+  }, [])
+
+  const toggleFullscreen = async () => {
+    setFullscreenError('')
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen()
+        return
+      }
+      if (!pageHost.current?.requestFullscreen) {
+        setFullscreenError('Este navegador no permite pantalla completa. Puedes jugar en horizontal igualmente.')
+        return
+      }
+      await pageHost.current.requestFullscreen()
+    } catch {
+      setFullscreenError('No se pudo activar pantalla completa. Toca el botón de nuevo o usa el navegador en horizontal.')
+    }
+  }
 
   useEffect(() => {
     if (!sceneHost.current || !scenePeople) return
@@ -130,17 +166,24 @@ export function SurgeryPage({ onHome, onAnotherPatient }: { onHome: () => void; 
     setSceneRetry(attempt => attempt + 1)
   }
 
-  return <section className="page detail-page surgery-page">
+  return <section className="page detail-page surgery-page" ref={pageHost}>
     <button className="back-link" onClick={onHome}><ArrowLeft size={16} /> Volver al hospital</button>
     <div className="surgery-page-heading"><div><div className="eyebrow">AVENTURA FICTICIA · JUEGO ABSTRACTO</div><h1>Quirófano</h1><p className="subtitle">{patient ? `${patient.name} · ${patient.procedure}` : 'Paciente pendiente de seleccionar'}</p></div><div className="surgery-heading-stats"><span><Sparkles size={15} /> {surgery.score} puntos</span><span><Activity size={15} /> {surgery.errors} errores</span></div></div>
-    <div className="surgery-workspace">
+    <div className={`surgery-workspace ${terminal ? 'surgery-workspace-terminal' : ''}`}>
       <div className={`surgery-visual intensity-${surgery.bleedingIntensity} ${surgery.activeComplication === 'bleeding' ? 'show-fictional-bleed' : ''}`}>
         <div className="surgery-scene-host" ref={sceneHost} />
+        <div className="surgery-display-controls">
+          <button type="button" className="surgery-fullscreen-button" aria-label={isFullscreen ? 'Salir de pantalla completa' : 'Activar pantalla completa'} aria-pressed={isFullscreen} onClick={toggleFullscreen}>
+            {isFullscreen ? <Minimize2 size={15} /> : <Maximize2 size={15} />}
+            {isFullscreen ? 'Salir' : isLandscapeMobile ? 'Pantalla completa' : 'Ampliar'}
+          </button>
+          {fullscreenError && <span role="alert">{fullscreenError}</span>}
+        </div>
         {sceneStatus === 'loading' && <div className="scene-loading" role="status"><span className="scene-loading-spinner" /> Preparando el quirófano…</div>}
         {sceneStatus === 'error' && <div className="scene-load-error" role="alert"><b>No pudimos cargar el escenario</b><span>{sceneError}</span><button className="primary-btn" onClick={retryScene}>Reintentar carga</button></div>}
         {surgery.activeComplication === 'bleeding' && surgery.bleedingIntensity !== 'off' && <div className="abstract-visual-effect" aria-hidden="true"><i /><i /><i /></div>}
         <SurgeryAlert status={surgery.status} />
-        <div className="portrait-orientation"><span>↻</span><b>Gira tu dispositivo</b><small>La aventura se disfruta mejor en horizontal</small></div>
+        <div className="portrait-orientation"><span>↻</span><b>Gira tu dispositivo</b><small>En horizontal, toca «Pantalla completa».</small></div>
       </div>
       <aside className="surgery-control-panel">
         {surgery.status === 'READY' && <div className="surgery-learning-intro"><span>APRENDE JUGANDO</span><h2>OPERAR</h2><ul><li>Preparación</li><li>Coordinación</li><li>Precisión</li><li>Cierre</li></ul><p>Una aventura de fantasía con minijuegos abstractos y cuidado en equipo.</p></div>}

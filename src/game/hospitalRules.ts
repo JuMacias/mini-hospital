@@ -23,6 +23,7 @@ export interface HospitalItemDefinition {
 export const hospitalRooms: HospitalRoomDefinition[] = [
   { id: 'reception', name: 'Recepción', description: 'El primer saludo para cada paciente.', levelRequired: 1, experienceRequired: 0, surgeriesRequired: 0, unlockPrice: 0 },
   { id: 'waiting', name: 'Sala de espera', description: 'Un lugar amable para esperar acompañado.', levelRequired: 1, experienceRequired: 0, surgeriesRequired: 0, unlockPrice: 0 },
+  { id: 'review', name: 'Sala de revisión', description: 'Un espacio tranquilo para revisar a pacientes antes de la consulta.', levelRequired: 1, experienceRequired: 0, surgeriesRequired: 0, unlockPrice: 0 },
   { id: 'consultation', name: 'Consultorio', description: 'Un espacio tranquilo para conversar.', levelRequired: 2, experienceRequired: 80, surgeriesRequired: 1, unlockPrice: 35 },
   { id: 'corridor', name: 'Pasillos', description: 'Conectan las áreas de tu hospital.', levelRequired: 1, experienceRequired: 0, surgeriesRequired: 0, unlockPrice: 0 },
   { id: 'operating', name: 'Quirófano', description: 'Prepara la siguiente aventura ficticia.', levelRequired: 3, experienceRequired: 180, surgeriesRequired: 2, unlockPrice: 80 },
@@ -63,8 +64,8 @@ export const hospitalCategoryLabels: Record<HospitalItemCategory, string> = {
   decor: 'Decoración',
 }
 
-const initialRooms: HospitalRoomId[] = ['reception', 'waiting', 'corridor']
-const roomIds: HospitalRoomId[] = ['reception', 'waiting', 'consultation', 'corridor', 'operating', 'recovery']
+const initialRooms: HospitalRoomId[] = ['reception', 'waiting', 'review', 'corridor']
+const roomIds: HospitalRoomId[] = ['reception', 'waiting', 'review', 'consultation', 'corridor', 'operating', 'recovery']
 
 export function hospitalLevelForExperience(experience: number): number {
   return Math.min(5, 1 + Math.floor(Math.max(0, experience) / 100))
@@ -92,6 +93,7 @@ export function createInitialHospitalState(experience = 0): HospitalState {
     selectedRoom: 'reception',
     coinsSpent: 0,
     careQueue: [],
+    patientLocations: {},
     claimedMissionIds: [],
     furniture: [],
   }

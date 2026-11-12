@@ -6,7 +6,7 @@ describe('reglas del hospital personalizable', () => {
   it('inicia con áreas esenciales y escala el nivel con experiencia', () => {
     const hospital = createInitialHospitalState(140)
     expect(hospital.level).toBe(2)
-    expect(hospital.unlockedRooms).toEqual(['reception', 'waiting', 'corridor'])
+    expect(hospital.unlockedRooms).toEqual(['reception', 'waiting', 'review', 'corridor'])
     expect(hospital.selectedRoom).toBe('reception')
     expect(hospitalLevelForExperience(0)).toBe(1)
     expect(hospitalLevelForExperience(1000)).toBe(5)

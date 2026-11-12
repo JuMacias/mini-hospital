@@ -1,0 +1,181 @@
+.app-shell.night-mode {
+  color-scheme: dark;
+  color: #e4edf0;
+  background: #101a22;
+}
+
+.app-shell.night-mode .main-area {
+  background: #101a22;
+}
+
+.app-shell.night-mode .sidebar,
+.app-shell.night-mode .topbar,
+.app-shell.night-mode .surgery-control-panel,
+.app-shell.night-mode .audio-card,
+.app-shell.night-mode .appearance-card,
+.app-shell.night-mode .hospital-map-card,
+.app-shell.night-mode .hospital-queue,
+.app-shell.night-mode .hospital-missions,
+.app-shell.night-mode .team-profile-panel {
+  background: #182630;
+  border-color: #2c414b;
+}
+
+.app-shell.night-mode [class*="card"],
+.app-shell.night-mode [class*="panel"],
+.app-shell.night-mode [class*="modal"],
+.app-shell.night-mode [class*="dialog"],
+.app-shell.night-mode [class*="option"] {
+  border-color: #314751;
+}
+
+.app-shell.night-mode .setup-card,
+.app-shell.night-mode .staff-card,
+.app-shell.night-mode .hospital-patient-card,
+.app-shell.night-mode .hospital-mission,
+.app-shell.night-mode .challenge-panel,
+.app-shell.night-mode .challenge-option,
+.app-shell.night-mode .audio-card-header,
+.app-shell.night-mode .profile-mini {
+  background: #1d303a;
+  border-color: #314751;
+}
+
+.app-shell.night-mode h1,
+.app-shell.night-mode h2,
+.app-shell.night-mode h3,
+.app-shell.night-mode h4,
+.app-shell.night-mode .brand b,
+.app-shell.night-mode .profile-mini b,
+.app-shell.night-mode .crumb b {
+  color: #e6eff1;
+}
+
+.app-shell.night-mode p,
+.app-shell.night-mode small,
+.app-shell.night-mode label,
+.app-shell.night-mode .subtitle,
+.app-shell.night-mode .nav-label,
+.app-shell.night-mode .nav-item,
+.app-shell.night-mode .crumb,
+.app-shell.night-mode .online,
+.app-shell.night-mode .hospital-patient-copy,
+.app-shell.night-mode .hospital-care-status {
+  color: #b2c2c8;
+}
+
+.app-shell.night-mode .nav-item:hover,
+.app-shell.night-mode .nav-item.active,
+.app-shell.night-mode .help-card,
+.app-shell.night-mode .challenge-option.picked {
+  background: #243b43;
+}
+
+.app-shell.night-mode .nav-item.active,
+.app-shell.night-mode .text-link,
+.app-shell.night-mode .back-link {
+  color: #82d3c4;
+}
+
+.app-shell.night-mode .help-card strong,
+.app-shell.night-mode .team-character-caption,
+.app-shell.night-mode .hospital-patient-copy b {
+  color: #d9e8e8;
+}
+
+.app-shell.night-mode .icon-btn,
+.app-shell.night-mode .secondary-btn,
+.app-shell.night-mode .text-input,
+.app-shell.night-mode input:not([type="range"]),
+.app-shell.night-mode select,
+.app-shell.night-mode textarea {
+  color: #e2ecef;
+  background: #1d303a;
+  border-color: #3a535e;
+}
+
+.app-shell.night-mode .surgery-phase-heading h2,
+.app-shell.night-mode .challenge-panel > p,
+.app-shell.night-mode .phase-step.current {
+  color: #c8d8dc;
+}
+
+.app-shell.night-mode .surgery-page:fullscreen {
+  background: #101a22;
+}
+
+.app-shell.night-mode .surgery-page:fullscreen .surgery-visual {
+  border-color: #344852;
+}
+
+.app-shell.night-mode .hospital-emergency-banner {
+  background: #392e2a;
+  border-color: #78514b;
+  color: #ffe2cc;
+}
+
+.app-shell.night-mode .hospital-emergency-banner span {
+  color: #e3c9b8;
+}
+
+.app-shell.night-mode .surgery-scene-host canvas,
+.app-shell.night-mode .hospital-scene-wrap canvas {
+  filter: brightness(0.78) saturate(0.82);
+}
+
+.appearance-card {
+  max-width: 680px;
+  margin-top: 20px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border: 1px solid #edf1f0;
+  border-radius: 14px;
+  background: #fff;
+}
+
+.appearance-card > div {
+  display: grid;
+  gap: 5px;
+}
+
+.appearance-card b {
+  color: #415a62;
+  font: 800 13px Nunito, sans-serif;
+}
+
+.appearance-card span {
+  color: #849699;
+  font-size: 10px;
+}
+
+.appearance-toggle {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  flex: 0 0 auto;
+  border: 1px solid #dcebe6;
+  border-radius: 9px;
+  padding: 0 12px;
+  background: #f2f8f6;
+  color: #367f75;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.app-shell.night-mode .appearance-toggle {
+  background: #29444b;
+  border-color: #46636a;
+  color: #b9eee0;
+}
+
+@media (max-width: 560px) {
+  .appearance-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

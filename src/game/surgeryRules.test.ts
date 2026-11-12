@@ -4,6 +4,7 @@ import {
   canStartSurgery,
   createInitialSurgeryState,
   createSurgeryResult,
+  getSurgeryErrorPenalty,
   resolveComplication,
   resumeSurgery,
   startSurgery,
@@ -59,6 +60,12 @@ describe('reglas de cirugía ficticia', () => {
     expect(next.activeComplication).toBe('bleeding')
   })
 
+  it('muestra la penalización real de cada error según la dificultad', () => {
+    expect(getSurgeryErrorPenalty('easy')).toBe(9)
+    expect(getSurgeryErrorPenalty('normal')).toBe(15)
+    expect(getSurgeryErrorPenalty('hard')).toBe(23)
+  })
+
   it('el rendimiento del equipo modifica estabilidad y riesgo de eventos', () => {
     const base = startSurgery(createInitialSurgeryState('luna', 'normal'))
     const lowPerformance = { ...base, stability: 50, teamPerformance: 0 }
@@ -77,7 +84,10 @@ describe('reglas de cirugía ficticia', () => {
     const stabilized = resolveComplication(event, 'coordinate', 0.5)
     expect(stabilized.status).toBe('STABILIZED')
     expect(stabilized.stability).toBe(100)
+    expect(stabilized.complications[0]).toMatchObject({ resolved: true, resolution: 'good' })
     expect(resumeSurgery(stabilized).status).toBe('IN_PROGRESS')
+    const penalized = resolveComplication(event, 'coordinate', 0.99)
+    expect(penalized.complications[0]).toMatchObject({ resolved: true, resolution: 'miss' })
   })
 
   it('completa una partida con éxito solo tras las acciones de las cuatro fases', () => {

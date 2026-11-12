@@ -98,7 +98,7 @@ export interface ConversationEntry {
   createdAt?: number
 }
 
-export type HospitalRoomId = 'reception' | 'waiting' | 'consultation' | 'corridor' | 'operating' | 'recovery'
+export type HospitalRoomId = 'reception' | 'waiting' | 'review' | 'consultation' | 'corridor' | 'operating' | 'recovery'
 export type HospitalItemCategory = 'wall' | 'floor' | 'bed' | 'chair' | 'table' | 'plant' | 'picture' | 'light' | 'decor'
 export type PatientCareStatus = 'arrived' | 'waiting' | 'consultation' | 'preparation' | 'surgery' | 'recovery' | 'discharged' | 'declined' | 'failed'
 
@@ -106,6 +106,7 @@ export interface PatientCareCase {
   id: string
   patientId: string
   status: PatientCareStatus
+  priority?: 'immediate'
   arrivedAt: number
   updatedAt: number
 }
@@ -129,6 +130,7 @@ export interface HospitalState {
   selectedRoom: HospitalRoomId
   coinsSpent: number
   careQueue: PatientCareCase[]
+  patientLocations: Record<string, HospitalRoomId>
   claimedMissionIds: string[]
   furniture: HospitalFurniturePlacement[]
 }
@@ -150,6 +152,7 @@ export interface SurgeryComplication {
   id: string
   type: ComplicationType
   resolved: boolean
+  resolution?: 'good' | 'miss'
 }
 
 export interface SurgeryState {

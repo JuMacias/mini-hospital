@@ -1,8 +1,20 @@
 .hospital-page{width:min(100%,1500px);padding-top:17px}
+.hospital-emergency-banner{display:grid;grid-template-columns:24px minmax(0,1fr) auto;align-items:center;gap:11px;margin:12px 0;padding:12px 14px;border:1px solid #efc8aa;border-left:4px solid #e99572;border-radius:12px;background:#fff7ee;color:#a75f50}
+.hospital-emergency-banner>svg{color:#d77d6b}
+.hospital-emergency-banner>div{display:grid;gap:3px}
+.hospital-emergency-banner b{font:800 12px Nunito,sans-serif}
+.hospital-emergency-banner span{color:#8f7770;font-size:10px;line-height:1.45}
+.hospital-emergency-banner button{min-height:35px;display:inline-flex;align-items:center;justify-content:center;gap:6px;border:0;border-radius:8px;padding:0 12px;background:#d67c67;color:#fff;font-size:10px;font-weight:800}
+.hospital-patient-card.is-immediate{border-color:#e8b39c;box-shadow:0 0 0 2px #f7e5d8}
+@media(max-width:560px){.hospital-emergency-banner{grid-template-columns:22px minmax(0,1fr)}.hospital-emergency-banner button{grid-column:2;justify-self:start}}
 .hospital-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:10px 0 16px}
 .hospital-heading h1{margin:4px 0 2px;color:#344e59;font:900 27px Nunito,sans-serif}
 .hospital-heading .subtitle{max-width:620px}
 .hospital-wallet{display:flex;gap:9px}
+.hospital-header-actions{display:flex;align-items:stretch;gap:8px}
+.hospital-night-toggle{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:44px;padding:0 12px;border:1px solid #dfece5;border-radius:12px;background:#f3f8f5;color:#547969;font-size:10px;font-weight:800;white-space:nowrap;cursor:pointer;transition:background .16s,transform .16s}
+.hospital-night-toggle:hover{background:#e8f4ed;transform:translateY(-1px)}
+.hospital-night-toggle[aria-pressed=true]{border-color:#657d9c;background:#344356;color:#fff}
 .hospital-wallet>span{display:grid;grid-template-columns:18px auto;align-items:center;column-gap:5px;min-width:102px;padding:9px 12px;border:1px solid #e8efeb;border-radius:13px;background:#fff;color:#347967;font-size:15px;font-weight:900;box-shadow:0 6px 16px #426d5b0b}
 .hospital-wallet>span:nth-child(2){color:#8c78bd}
 .hospital-wallet small{grid-column:2;font-size:8px;letter-spacing:.6px;color:#8da19a}
@@ -21,6 +33,14 @@
 .hospital-map-toolbar>div:first-child{display:grid;gap:3px}
 .hospital-map-toolbar b{color:#435d55;font-size:12px}
 .hospital-map-toolbar span{color:#93a49d;font-size:9px}
+.hospital-person-destinations{display:flex;align-items:center;gap:10px;padding:10px 12px;border-bottom:1px solid #edf2ef;background:#f7fbf8}
+.hospital-person-destinations>div:first-child{display:grid;flex:0 0 auto;gap:2px}
+.hospital-person-destinations>div:first-child b{color:#435d55;font-size:10px}
+.hospital-person-destinations>div:first-child span{color:#93a49d;font-size:8px}
+.hospital-destination-list{display:flex;flex:1;gap:5px;overflow-x:auto;scrollbar-width:thin}
+.hospital-destination-list button{display:inline-flex;align-items:center;gap:4px;flex:0 0 auto;padding:6px 8px;border:1px solid #dfece5;border-radius:16px;background:#fff;color:#547969;font-size:8px;font-weight:700;cursor:pointer}
+.hospital-destination-list button:disabled{color:#a3978c;background:#faf9f7;cursor:not-allowed}
+.hospital-destination-cancel{display:grid;place-items:center;flex:0 0 28px;width:28px;height:28px;border:0;border-radius:8px;background:#edf3ef;color:#72877d;cursor:pointer}
 .hospital-zoom-controls{display:flex;flex:0 0 auto;gap:5px}
 .hospital-zoom-controls button{display:grid;place-items:center;width:30px;height:29px;border:1px solid #e2ece7;border-radius:9px;background:#f9fcfa;color:#548c7a;cursor:pointer;transition:background .16s,transform .16s}
 .hospital-zoom-controls button:hover{background:#e8f6ef;transform:translateY(-1px)}
@@ -145,3 +165,4 @@
 @media(max-width:850px){.hospital-workspace,.hospital-operations{grid-template-columns:1fr}.hospital-room-panel{max-height:none}.hospital-scene-wrap{height:min(68vh,500px);min-height:380px}}
 @media(max-width:560px){.hospital-page{padding-top:12px}.hospital-heading{align-items:flex-start;flex-direction:column}.hospital-heading h1{font-size:23px}.hospital-wallet{width:100%}.hospital-wallet>span{flex:1}.hospital-level-card{align-items:flex-start;gap:9px;padding:11px}.hospital-level-medal{flex-basis:36px;height:36px}.hospital-level-tag{margin-left:auto;padding:6px 8px;font-size:7px}.hospital-level-copy>span{font-size:8px}.hospital-map-toolbar{align-items:flex-start;padding:11px}.hospital-map-toolbar span{max-width:225px;line-height:1.4}.hospital-zoom-controls{gap:3px}.hospital-zoom-controls button{width:27px;height:27px}.hospital-scene-wrap{height:420px;min-height:350px}.hospital-room-panel{padding:13px}.hospital-item-card{grid-template-columns:37px minmax(0,1fr) repeat(3,auto);gap:5px;padding:7px}.hospital-item-swatch{width:35px;height:35px}.hospital-item-copy span{font-size:7.5px}.hospital-queue,.hospital-missions{padding:11px}.hospital-queue-counts{grid-template-columns:repeat(3,minmax(0,1fr))}.hospital-patient-list{grid-template-columns:1fr}.hospital-patient-card{grid-template-columns:39px minmax(0,1fr) auto}.hospital-placement-panel>div:last-child button{flex:1}.hospital-placed-list>div{grid-template-columns:minmax(0,1fr) repeat(3,28px)}}
 @media(prefers-reduced-motion:reduce){.hospital-xp-track i,.hospital-room-chip,.hospital-upgrade-button,.hospital-start-button,.hospital-zoom-controls button{transition:none}}
+@media(max-width:560px){.hospital-header-actions{width:100%}.hospital-wallet{width:auto;flex:1;min-width:0}.hospital-wallet>span{min-width:0;padding:8px}.hospital-night-toggle{padding:0 9px;font-size:9px}.hospital-person-destinations{align-items:flex-start;flex-wrap:wrap}.hospital-person-destinations>div:first-child{flex:1}.hospital-destination-list{order:3;flex-basis:100%}.hospital-destination-cancel{margin-left:auto}}

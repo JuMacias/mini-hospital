@@ -2,8 +2,8 @@ import Phaser from 'phaser'
 import { CharacterSprite } from './CharacterSprite'
 import { disposeCharacters } from './characterVisuals'
 import { hospitalItems, hospitalRooms } from './hospitalRules'
-import { canPlaceHospitalFurniture, hospitalRoomWorldPositions } from './hospitalOperations'
-import type { CharacterAnimation, Doctor, HospitalRoomId, HospitalState, MedicalProfessional, Patient } from '../types'
+import { canPlaceHospitalFurniture, createStaffMovementRoutes, createStaffRouteToRoom, hospitalRoomWorldPositions } from './hospitalOperations'
+import type { CharacterAnimation, Doctor, HospitalRoomId, HospitalState, MedicalProfessional, Patient, PatientCareStatus } from '../types'
 
 export interface HospitalSceneData {
   doctor: Doctor
@@ -18,7 +18,7 @@ interface RoomPosition {
   y: number
 }
 
-const worldSize = { width: 1200, height: 780 }
+const worldSize = { width: 1200, height: 1100 }
 const roomPositions = hospitalRoomWorldPositions
 const roomHalfWidth = 162
 const roomHalfHeight = 91
@@ -46,7 +46,10 @@ export class HospitalScene extends Phaser.Scene {
   private dataState: HospitalSceneData
   private readonly mapObjects: Phaser.GameObjects.GameObject[] = []
   private readonly characters: CharacterSprite[] = []
-  private readonly walkers: Array<{ character: CharacterSprite; routes: Array<Array<{ x: number; y: number }>>; after: CharacterAnimation }> = []
+  private readonly walkers: Array<{ character: CharacterSprite; routes: Array<Array<{ x: number; y: number }>>; after: CharacterAnimation; routeIndex: number; id?: string }> = []
+  private readonly charactersById = new Map<string, CharacterSprite>()
+  private readonly manualDestinations = new Map<string, HospitalRoomId>()
+  private readonly dynamicCharacterObjects: Phaser.GameObjects.GameObject[] = []
   private selectedRoom: HospitalRoomId
   private lastPointer = { x: 0, y: 0 }
   private dragPointer?: number
@@ -58,6 +61,7 @@ export class HospitalScene extends Phaser.Scene {
   private zoomListener?: (amount: number) => void
   private resetListener?: () => void
   private placementModeListener?: (mode: { itemId: string; placementId?: string; roomId?: HospitalRoomId } | null) => void
+  private characterMoveListener?: (move: { id: string; roomId: HospitalRoomId }) => void
   private roomPointerDown?: (pointer: Phaser.Input.Pointer) => void
   private roomPointerMove?: (pointer: Phaser.Input.Pointer) => void
   private roomPointerUp?: (pointer: Phaser.Input.Pointer) => void
@@ -83,6 +87,8 @@ export class HospitalScene extends Phaser.Scene {
         || previous.hospital.roomLevels !== data.hospital.roomLevels
         || previous.hospital.decorations !== data.hospital.decorations
         || previous.hospital.furniture !== data.hospital.furniture
+      const patientLocationChanges = Object.entries(data.hospital.patientLocations)
+        .filter(([patientId, roomId]) => previous.hospital.patientLocations[patientId] !== roomId)
       const charactersChanged = previous.doctor !== data.doctor
         || previous.team !== data.team
         || previous.receptionist !== data.receptionist
@@ -91,6 +97,11 @@ export class HospitalScene extends Phaser.Scene {
       this.selectedRoom = data.hospital.selectedRoom
       if (mapChanged) this.drawMap()
       if (charactersChanged) this.drawCharacters()
+      else patientLocationChanges.forEach(([patientId, roomId]) => {
+        if (roomId && this.dataState.hospital.unlockedRooms.includes(roomId)) {
+          this.moveCharacterToRoom(patientId, roomId)
+        }
+      })
     }
     this.zoomListener = amount => this.setZoom(this.cameras.main.zoom + amount)
     this.resetListener = () => {
@@ -103,13 +114,15 @@ export class HospitalScene extends Phaser.Scene {
       this.placementPointer = undefined
       this.drawPlacementPreview(undefined)
     }
+    this.characterMoveListener = move => this.moveCharacterToRoom(move.id, move.roomId)
     this.game.events.on('hospital:state', this.stateListener)
     this.game.events.on('hospital:zoom', this.zoomListener)
     this.game.events.on('hospital:camera-reset', this.resetListener)
     this.game.events.on('hospital:placement-mode', this.placementModeListener)
+    this.game.events.on('hospital:move-character', this.characterMoveListener)
     this.game.events.emit('hospital:scene-ready')
     this.time.addEvent({
-      delay: 4800,
+      delay: 1600,
       loop: true,
       callback: () => this.moveNextCharacter(),
     })
@@ -137,6 +150,7 @@ export class HospitalScene extends Phaser.Scene {
         this.placementPointer = pointer.id
         return
       }
+      if (this.input.hitTestPointer(pointer).some(object => object.getData('hospital-character-id'))) return
       this.dragPointer = pointer.id
       this.lastPointer = { x: pointer.x, y: pointer.y }
     }
@@ -201,14 +215,15 @@ export class HospitalScene extends Phaser.Scene {
     background.fillStyle(0xeaf4ef, 1)
     background.fillRect(0, 0, worldSize.width, worldSize.height)
     background.fillStyle(0xf6faf8, 1)
-    background.fillPoints([{ x: 600, y: 28 }, { x: 1168, y: 280 }, { x: 600, y: 748 }, { x: 32, y: 280 }], true)
+    background.fillPoints([{ x: 600, y: 28 }, { x: 1168, y: 550 }, { x: 600, y: 1070 }, { x: 32, y: 550 }], true)
     background.lineStyle(3, 0xd2e5dc, 1)
-    background.strokePoints([{ x: 600, y: 28 }, { x: 1168, y: 280 }, { x: 600, y: 748 }, { x: 32, y: 280 }], true)
+    background.strokePoints([{ x: 600, y: 28 }, { x: 1168, y: 550 }, { x: 600, y: 1070 }, { x: 32, y: 550 }], true)
 
     const rooms = [...hospitalRooms].sort((a, b) => roomPositions[a.id].y - roomPositions[b.id].y)
     rooms.forEach(room => this.drawRoom(room.id, room.name, roomPositions[room.id]))
     this.drawHallways()
     this.drawRoomFurniture()
+    this.drawMainEntrance()
   }
 
   private drawHallways() {
@@ -218,6 +233,10 @@ export class HospitalScene extends Phaser.Scene {
     g.fillPoints([{ x: 445, y: 393 }, { x: 600, y: 359 }, { x: 755, y: 393 }, { x: 600, y: 429 }], true)
     g.lineStyle(2, 0xc3ddd1, 0.8)
     g.strokePoints([{ x: 365, y: 376 }, { x: 600, y: 324 }, { x: 835, y: 376 }, { x: 600, y: 430 }], true)
+    g.fillStyle(0xdcece5, 1)
+    g.fillPoints([{ x: 382, y: 605 }, { x: 418, y: 605 }, { x: 430, y: 690 }, { x: 520, y: 752 }, { x: 600, y: 780 }, { x: 578, y: 808 }, { x: 500, y: 780 }, { x: 405, y: 714 }], true)
+    g.lineStyle(2, 0xc3ddd1, 0.8)
+    g.strokePoints([{ x: 382, y: 605 }, { x: 418, y: 605 }, { x: 430, y: 690 }, { x: 520, y: 752 }, { x: 600, y: 780 }])
     this.addText(556, 381, 'PASILLO CENTRAL', { fontFamily: 'DM Sans', fontSize: '9px', color: '#719287', fontStyle: 'bold' }, 4)
     ;[420, 780].forEach(x => {
       const sign = this.addGraphics(5)
@@ -247,6 +266,7 @@ export class HospitalScene extends Phaser.Scene {
     g.fillPoints([top, right, bottom, left], true)
     g.lineStyle(this.selectedRoom === roomId ? 5 : 2, this.selectedRoom === roomId ? 0x4fb99c : 0xb9d7ca, 1)
     g.strokePoints([top, right, bottom, left], true)
+    this.drawRoomDoor(g, x, y)
     if (floorItemId === 'floor-checker' || floorItemId === 'floor-oak') {
       g.lineStyle(1, floorItemId === 'floor-oak' ? 0xb49a76 : 0xc8bdd9, 0.55)
       for (let index = -2; index <= 2; index += 1) {
@@ -284,7 +304,6 @@ export class HospitalScene extends Phaser.Scene {
 
   private drawRoomFurniture() {
     hospitalRooms.forEach(room => {
-      if (!this.dataState.hospital.unlockedRooms.includes(room.id)) return
       const { x, y } = roomPositions[room.id]
       const decoration = this.dataState.hospital.decorations[room.id] ?? {}
       const g = this.addGraphics(y + 20)
@@ -295,9 +314,9 @@ export class HospitalScene extends Phaser.Scene {
       const placedCategories = new Set(this.dataState.hospital.furniture
         .filter(item => item.roomId === room.id)
         .map(item => hospitalItems.find(definition => definition.id === item.itemId)?.category))
-      const hasBed = ['consultation', 'operating', 'recovery'].includes(room.id)
+      const hasBed = ['review', 'consultation', 'operating', 'recovery'].includes(room.id)
       if (hasBed && !placedCategories.has('bed')) this.drawBed(g, x - 4, y + 5, bedStyle)
-      if (['reception', 'waiting', 'consultation'].includes(room.id) && !placedCategories.has('table')) this.drawTable(g, x - 100, y + 12, tableStyle)
+      if (['reception', 'waiting', 'review', 'consultation'].includes(room.id) && !placedCategories.has('table')) this.drawTable(g, x - 100, y + 12, tableStyle)
       if (!placedCategories.has('chair') && (room.id === 'reception' || room.id === 'waiting' || room.id === 'recovery')) {
         this.drawChair(g, x + 79, y + 13, chairStyle)
         this.drawChair(g, x + 113, y + 2, chairStyle)
@@ -306,7 +325,9 @@ export class HospitalScene extends Phaser.Scene {
       }
       if (['operating', 'consultation', 'corridor'].includes(room.id) && !placedCategories.has('table')) this.drawTable(g, x + 100, y + 4, tableStyle)
       if (!placedCategories.has('plant') && plantStyle !== 'plant-basic') this.drawPlant(g, x - 124, y + 25, plantStyle)
-      else if (!placedCategories.has('plant') && (room.id === 'reception' || room.id === 'waiting')) this.drawPlant(g, x - 124, y + 25, plantStyle)
+      else if (!placedCategories.has('plant') && ['reception', 'waiting', 'review', 'consultation', 'corridor', 'recovery'].includes(room.id)) {
+        this.drawPlant(g, x - 124, y + 25, plantStyle)
+      }
       if (!placedCategories.has('picture') && !placedCategories.has('light') && !placedCategories.has('decor')) {
         this.drawWallDecor(g, x, y, decoration.picture ?? 'picture-basic', decoration.light ?? 'light-soft', decoration.decor ?? 'decor-none')
       }
@@ -314,6 +335,41 @@ export class HospitalScene extends Phaser.Scene {
       if (room.id === 'recovery') this.drawRecoveryPillows(g, x + 108, y - 6)
     })
     this.drawPlacedFurniture()
+  }
+
+  private drawRoomDoor(g: Phaser.GameObjects.Graphics, x: number, y: number) {
+    g.fillStyle(0x526d61, 0.18)
+    g.fillEllipse(x, y + 62, 66, 19)
+    g.fillStyle(0x789187, 1)
+    g.fillPoints([{ x: x - 25, y: y + 43 }, { x, y: y + 30 }, { x: x + 25, y: y + 43 }, { x, y: y + 57 }], true)
+    g.fillStyle(0x9a795f, 1)
+    g.fillPoints([{ x: x - 17, y: y + 45 }, { x, y: y + 36 }, { x, y: y + 72 }, { x: x - 17, y: y + 81 }], true)
+    g.fillStyle(0xd9b891, 1)
+    g.fillPoints([{ x: x - 14, y: y + 48 }, { x: x - 2, y: y + 42 }, { x: x - 2, y: y + 68 }, { x: x - 14, y: y + 74 }], true)
+    g.fillStyle(0xf2d99e, 1)
+    g.fillCircle(x - 5, y + 60, 2)
+  }
+
+  private drawMainEntrance() {
+    const g = this.addGraphics(8)
+    g.fillStyle(0xd5e8df, 1)
+    g.fillPoints([{ x: 555, y: 970 }, { x: 600, y: 950 }, { x: 645, y: 970 }, { x: 600, y: 991 }], true)
+    g.lineStyle(2, 0xa5c7b7, 1)
+    g.strokePoints([{ x: 555, y: 970 }, { x: 600, y: 950 }, { x: 645, y: 970 }, { x: 600, y: 991 }], true)
+    g.fillStyle(0x806a56, 1)
+    g.fillPoints([{ x: 565, y: 992 }, { x: 600, y: 976 }, { x: 600, y: 1048 }, { x: 565, y: 1032 }], true)
+    g.fillPoints([{ x: 600, y: 976 }, { x: 635, y: 992 }, { x: 635, y: 1032 }, { x: 600, y: 1048 }], true)
+    g.fillStyle(0xc8a47e, 1)
+    g.fillPoints([{ x: 570, y: 996 }, { x: 596, y: 984 }, { x: 596, y: 1040 }, { x: 570, y: 1028 }], true)
+    g.fillStyle(0xd9b891, 1)
+    g.fillPoints([{ x: 604, y: 984 }, { x: 630, y: 996 }, { x: 630, y: 1028 }, { x: 604, y: 1040 }], true)
+    g.fillStyle(0xf5dfaa, 1)
+    g.fillCircle(591, 1012, 2)
+    g.fillCircle(609, 1012, 2)
+    this.addText(600, 1084, 'ENTRADA PRINCIPAL', {
+      fontFamily: 'Nunito, sans-serif', fontSize: '10px', color: '#496b5e', fontStyle: 'bold',
+      backgroundColor: '#f7fffbdd', padding: { x: 7, y: 3 },
+    }, 9).setOrigin(0.5)
   }
 
   private drawPlacedFurniture() {
@@ -497,6 +553,9 @@ export class HospitalScene extends Phaser.Scene {
     disposeCharacters(this.characters)
     this.characters.length = 0
     this.walkers.length = 0
+    this.charactersById.clear()
+    this.dynamicCharacterObjects.forEach(object => object.destroy())
+    this.dynamicCharacterObjects.length = 0
     const unlocked = this.dataState.hospital.unlockedRooms
     const createCharacter = (
       appearance: Doctor | MedicalProfessional | Patient,
@@ -504,6 +563,7 @@ export class HospitalScene extends Phaser.Scene {
       x: number,
       y: number,
       animation: CharacterAnimation,
+      selectable?: { id: string; kind: 'staff' | 'patient'; status?: PatientCareStatus },
     ) => {
       const characterAppearance = 'age' in appearance
         ? {
@@ -528,32 +588,60 @@ export class HospitalScene extends Phaser.Scene {
       })
       character.root.setDepth(y)
       character.setAnimation(animation)
+      if (selectable) {
+        character.root.setInteractive(
+          new Phaser.Geom.Rectangle(-32, -76, 64, 126),
+          Phaser.Geom.Rectangle.Contains,
+        )
+        character.root.setData('hospital-character-id', selectable.id)
+        character.root.on('pointerdown', () => {
+          this.game.events.emit(selectable.kind === 'patient' ? 'hospital:patient-selected' : 'hospital:character-selected', {
+            id: selectable.id,
+            name: appearance.name,
+            ...(selectable.status ? { status: selectable.status } : {}),
+          })
+        })
+        this.charactersById.set(selectable.id, character)
+      }
       this.characters.push(character)
       return character
     }
     const addWalker = (
       character: CharacterSprite,
-      route: Array<{ x: number; y: number }>,
+      routes: Array<Array<{ x: number; y: number }>>,
       after: CharacterAnimation,
-    ) => this.walkers.push({ character, routes: [route], after })
+      id?: string,
+    ) => this.walkers.push({ character, routes, after, routeIndex: 0, id })
     const latestCase = [...this.dataState.hospital.careQueue].sort((a, b) => b.updatedAt - a.updatedAt)[0]
     const teamReaction: CharacterAnimation = latestCase?.status === 'failed' ? 'sad'
       : latestCase?.status === 'recovery' ? 'happy' : 'idle'
-    const doctor = createCharacter(this.dataState.doctor, 'DIRECCIÓN', 420, 406, teamReaction)
-    addWalker(doctor, [{ x: 440, y: 401 }, { x: 420, y: 406 }, { x: 402, y: 410 }, { x: 420, y: 406 }], teamReaction)
+    const doctorId = 'doctor'
+    const doctorDestination = this.manualDestinations.get(doctorId)
+    const doctorX = doctorDestination ? roomPositions[doctorDestination].x - 48 : 420
+    const doctorY = doctorDestination ? roomPositions[doctorDestination].y + 24 : 406
+    const doctor = createCharacter(this.dataState.doctor, 'DIRECCIÓN', doctorX, doctorY, teamReaction, { id: doctorId, kind: 'staff' })
+    if (!doctorDestination) addWalker(doctor, createStaffMovementRoutes(unlocked), teamReaction, doctorId)
     this.dataState.team.forEach((person, index) => {
-      const x = 500 + index * 72
-      const y = index % 2 ? 411 : 390
+      const destination = this.manualDestinations.get(person.id)
+      const x = destination ? roomPositions[destination].x + ((index % 3) - 1) * 40 : 500 + index * 72
+      const y = destination ? roomPositions[destination].y + 20 + Math.floor(index / 3) * 16 : index % 2 ? 411 : 390
       const role = person.roles[0] === 'anesthesia' ? 'ANESTESIA'
         : person.roles[0] === 'instrument' ? 'INSTRUM.'
           : person.roles[0] === 'circulating' ? 'CIRC.' : 'ASIST.'
       const animation = teamReaction !== 'idle' ? teamReaction : index % 2 ? 'talk' : 'work'
-      const character = createCharacter({ ...person, name: person.name.split(' ')[0] }, role, x, y, animation)
-      addWalker(character, [{ x: x + 12, y }, { x, y }, { x: x - 12, y }, { x, y }], animation)
+      const character = createCharacter({ ...person, name: person.name.split(' ')[0] }, role, x, y, animation, { id: person.id, kind: 'staff' })
+      if (!destination) addWalker(character, createStaffMovementRoutes(unlocked, index + 1), animation, person.id)
     })
     if (this.dataState.receptionist) {
-      const receptionist = createCharacter(this.dataState.receptionist, 'RECEPCIÓN', 207, 208, 'work')
-      addWalker(receptionist, [{ x: 219, y: 208 }, { x: 207, y: 208 }, { x: 195, y: 208 }, { x: 207, y: 208 }], 'work')
+      const receptionistId = this.dataState.receptionist.id
+      const destination = this.manualDestinations.get(receptionistId)
+      const receptionist = createCharacter(
+        this.dataState.receptionist, 'RECEPCIÓN',
+        destination ? roomPositions[destination].x + 48 : 207,
+        destination ? roomPositions[destination].y + 30 : 208,
+        'work', { id: receptionistId, kind: 'staff' },
+      )
+      if (!destination) addWalker(receptionist, [[{ x: 219, y: 208 }, { x: 207, y: 208 }, { x: 195, y: 208 }, { x: 207, y: 208 }]], 'work', receptionistId)
     }
 
     const patientRoom = (status: string): HospitalRoomId => {
@@ -563,20 +651,32 @@ export class HospitalScene extends Phaser.Scene {
       if (['recovery', 'failed'].includes(status)) return 'recovery'
       return 'waiting'
     }
-    const patientsByRoom = new Map<HospitalRoomId, Array<{ patient: Patient; status: string }>>()
+    const patientsByRoom = new Map<HospitalRoomId, Array<{ patient: Patient; status: string; immediate: boolean }>>()
     this.dataState.hospital.careQueue.forEach(care => {
       if (care.status === 'discharged') return
       const patient = this.dataState.patients.find(item => item.id === care.patientId)
       if (!patient) return
-      const preferred = patientRoom(care.status)
+      const immediate = care.priority === 'immediate' && care.status === 'arrived'
+      const manualWaitingLocation = care.status === 'waiting' ? this.dataState.hospital.patientLocations[care.patientId] : undefined
+      const preferred = immediate ? 'reception' : manualWaitingLocation ?? (care.status === 'arrived' ? 'waiting' : patientRoom(care.status))
       const room = unlocked.includes(preferred) ? preferred : unlocked.includes('waiting') ? 'waiting' : 'reception'
       const group = patientsByRoom.get(room) ?? []
-      group.push({ patient, status: care.status })
+      group.push({ patient, status: care.status, immediate })
       patientsByRoom.set(room, group)
     })
     patientsByRoom.forEach((group, room) => {
       const center = roomPositions[room]
-      const layouts = group.length >= 5
+      const layouts = room === 'review'
+        ? group.length >= 5
+          ? [{ x: 65, y: -42 }, { x: -67, y: -20 }, { x: 0, y: -55 }, { x: 72, y: 20 }, { x: -66, y: 28 }]
+          : group.length === 4
+            ? [{ x: 65, y: -42 }, { x: -67, y: -20 }, { x: 0, y: -55 }, { x: 72, y: 20 }]
+            : group.length === 3
+              ? [{ x: 65, y: -42 }, { x: -67, y: -20 }, { x: 0, y: -55 }]
+              : group.length === 2
+                ? [{ x: 65, y: -42 }, { x: -67, y: -20 }]
+                : [{ x: 65, y: -42 }]
+        : group.length >= 5
         ? [{ x: -68, y: -22 }, { x: 68, y: -22 }, { x: 0, y: 0 }, { x: -45, y: 30 }, { x: 45, y: 30 }]
         : group.length === 4
           ? [{ x: -60, y: -20 }, { x: 60, y: -20 }, { x: -40, y: 30 }, { x: 40, y: 30 }]
@@ -585,32 +685,85 @@ export class HospitalScene extends Phaser.Scene {
             : group.length === 2
               ? [{ x: -38, y: 5 }, { x: 38, y: 5 }]
               : [{ x: 0, y: 5 }]
-      group.forEach(({ patient, status }, index) => {
+      group.forEach(({ patient, status, immediate }, index) => {
         const x = center.x + layouts[index].x
-        const y = center.y + layouts[index].y
+        const y = center.y + (immediate ? 22 : layouts[index].y)
+        if (immediate) this.drawEmergencyStretcher(x, y)
         const animation: CharacterAnimation = status === 'waiting' || status === 'recovery' ? 'rest'
           : status === 'consultation' || status === 'declined' ? 'talk'
             : status === 'failed' ? 'sad'
               : status === 'preparation' || status === 'surgery' ? 'work' : 'idle'
-        const statusRole = status === 'arrived' ? 'LLEGADA'
+        const statusRole = immediate ? 'ATENCIÓN'
+          : status === 'arrived' ? 'LLEGADA'
           : status === 'waiting' ? 'ESPERA'
             : status === 'consultation' ? 'CONSULTA'
               : status === 'preparation' ? 'PREPARACIÓN'
                 : status === 'surgery' ? 'CIRUGÍA'
                   : status === 'recovery' ? 'RECUPERACIÓN'
                     : status === 'failed' ? 'FALLO' : 'PAUSA'
-        const character = createCharacter(patient, statusRole, x, y, animation)
-        addWalker(character, [{ x: x - 10, y }, { x, y }, { x: x + 10, y }, { x, y }], animation)
+        const selectable = status === 'waiting' ? { id: patient.id, kind: 'patient' as const, status: 'waiting' as const } : undefined
+        const character = createCharacter(patient, statusRole, x, y, animation, selectable)
+        if (immediate) {
+          character.root.setRotation(Math.PI / 2).setScale(0.58)
+          character.root.list
+            .filter((object): object is Phaser.GameObjects.Text => object instanceof Phaser.GameObjects.Text)
+            .forEach(label => label.setVisible(false))
+        } else {
+          addWalker(character, [[{ x: x - 10, y }, { x, y }, { x: x + 10, y }, { x, y }]], animation, patient.id)
+        }
       })
     })
+  }
+
+  private drawEmergencyStretcher(x: number, y: number) {
+    const graphics = this.add.graphics().setDepth(y - 12)
+    graphics.fillStyle(0x526d61, 0.18)
+    graphics.fillEllipse(x, y + 13, 104, 22)
+    graphics.fillStyle(0x839d91, 1)
+    graphics.fillRoundedRect(x - 43, y + 5, 6, 21, 3)
+    graphics.fillRoundedRect(x + 37, y + 5, 6, 21, 3)
+    graphics.fillStyle(0xf7fbf9, 1)
+    graphics.fillRoundedRect(x - 51, y - 6, 102, 17, 7)
+    graphics.lineStyle(3, 0x7d9d8f, 1)
+    graphics.strokeRoundedRect(x - 51, y - 6, 102, 17, 7)
+    graphics.fillStyle(0xcce8e1, 1)
+    graphics.fillRoundedRect(x - 33, y - 4, 55, 13, 5)
+    graphics.fillStyle(0xf0f6f3, 1)
+    graphics.fillRoundedRect(x + 24, y - 4, 18, 12, 5)
+    graphics.lineStyle(2, 0x7d9d8f, 1)
+    graphics.lineBetween(x - 48, y - 10, x - 48, y + 13)
+    graphics.lineBetween(x + 48, y - 10, x + 48, y + 13)
+    this.dynamicCharacterObjects.push(graphics)
+    const alert = this.add.text(x, y - 43, '¡NECESITO ATENCIÓN!', {
+      fontFamily: 'Nunito, sans-serif',
+      fontSize: '9px',
+      color: '#92534d',
+      fontStyle: 'bold',
+      backgroundColor: '#fff2dce8',
+      padding: { x: 7, y: 4 },
+    }).setOrigin(0.5).setDepth(y + 60)
+    this.dynamicCharacterObjects.push(alert)
   }
 
   private moveNextCharacter() {
     if (!this.walkers.length) return
     const walker = this.walkers[this.routeIndex % this.walkers.length]
-    const path = walker.routes[this.routeIndex % walker.routes.length]
-    walker.character.walkRoute([...path], walker.after)
+    const path = walker.routes[walker.routeIndex % walker.routes.length]
+    walker.routeIndex += 1
+    if (path) walker.character.walkRoute([...path], walker.after)
     this.routeIndex += 1
+  }
+
+  private moveCharacterToRoom(id: string, roomId: HospitalRoomId) {
+    if (!this.dataState.hospital.unlockedRooms.includes(roomId)) return
+    const character = this.charactersById.get(id)
+    if (!character) return
+    this.manualDestinations.set(id, roomId)
+    for (let index = this.walkers.length - 1; index >= 0; index -= 1) {
+      if (this.walkers[index].id === id) this.walkers.splice(index, 1)
+    }
+    const isPatient = this.dataState.hospital.careQueue.some(care => care.patientId === id)
+    character.walkRoute(createStaffRouteToRoom({ x: character.root.x, y: character.root.y }, roomId), isPatient ? 'rest' : 'idle')
   }
 
   private onShutdown() {
@@ -618,6 +771,7 @@ export class HospitalScene extends Phaser.Scene {
     if (this.zoomListener) this.game.events.off('hospital:zoom', this.zoomListener)
     if (this.resetListener) this.game.events.off('hospital:camera-reset', this.resetListener)
     if (this.placementModeListener) this.game.events.off('hospital:placement-mode', this.placementModeListener)
+    if (this.characterMoveListener) this.game.events.off('hospital:move-character', this.characterMoveListener)
     if (this.roomPointerDown) this.input.off('pointerdown', this.roomPointerDown)
     if (this.roomPointerMove) this.input.off('pointermove', this.roomPointerMove)
     if (this.roomPointerUp) {
@@ -631,6 +785,8 @@ export class HospitalScene extends Phaser.Scene {
     this.placementPreview = undefined
     disposeCharacters(this.characters)
     this.mapObjects.forEach(object => object.destroy())
+    this.dynamicCharacterObjects.forEach(object => object.destroy())
+    this.dynamicCharacterObjects.length = 0
     this.mapObjects.length = 0
     this.walkers.length = 0
     this.stateListener = undefined

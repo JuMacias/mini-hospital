@@ -92,6 +92,14 @@ async function prepareSurgery(page: Page, difficulty = 'normal', checkResponsive
       }
       if (viewport.width === 844 && viewport.height === 390) {
         await expect(page.locator('.portrait-orientation')).toBeHidden()
+        const landscapeLayout = await page.evaluate(() => ({
+          sidebar: getComputedStyle(document.querySelector('.sidebar')!).display,
+          topbar: getComputedStyle(document.querySelector('.topbar')!).display,
+          surgeryHeight: document.querySelector('.surgery-page')!.getBoundingClientRect().height,
+        }))
+        expect(landscapeLayout.sidebar).toBe('none')
+        expect(landscapeLayout.topbar).toBe('none')
+        expect(landscapeLayout.surgeryHeight).toBeGreaterThanOrEqual(viewport.height)
       }
     }
   }
@@ -145,6 +153,7 @@ async function completePrecision(page: Page) {
 test('completes a successful surgery and preserves its result after reload', async ({ page }) => {
   await prepareSurgery(page)
   await completeChecklist(page, 'Nombre del paciente', 'Equipo presente')
+  await expect(page.locator('.challenge-panel p')).toHaveText('Segunda comprobación: equipo presente y señal del monitor.')
   await completeChecklist(page, 'Equipo presente', 'Señal del monitor')
   await completeCoordination(page)
   await completeCoordination(page)
@@ -209,29 +218,50 @@ test('records a failed surgery and allows a clean retry', async ({ page }) => {
   await prepareSurgery(page, 'hard')
 
   for (let attempt = 0; attempt < 3; attempt += 1) {
-    if (await page.getByRole('heading', { name: /La aventura terminó con una pérdida/ }).count()) break
+    if (await page.getByRole('heading', { name: /La misión se detuvo/ }).count()) break
     await page.getByRole('button', { name: 'Nombre del paciente', exact: true }).click()
     await page.getByRole('button', { name: 'Señal del monitor', exact: true }).click()
     await page.getByRole('button', { name: /Confirmar selección/ }).click()
-    if (await page.getByRole('heading', { name: /La aventura terminó con una pérdida/ }).count()) break
+    if (await page.getByRole('heading', { name: /La misión se detuvo/ }).count()) break
     await page.locator('.complication-overlay').waitFor({ state: 'visible' })
     await page.getByRole('button', { name: /Coordinar equipo/ }).click()
     await page.waitForTimeout(80)
   }
 
-  await expect(page.getByRole('heading', { name: 'La aventura terminó con una pérdida' })).toBeVisible()
-  await expect(page.getByText('PÉRDIDA FICTICIA · EL EQUIPO ACOMPAÑÓ AL PACIENTE')).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'La misión se detuvo' })).toBeVisible()
+  await expect(page.getByText('MISIÓN DETENIDA · PUEDES INTENTAR DE NUEVO')).toBeVisible()
+  await expect(page.locator('.result-explanation')).toContainText('cada error resta 23 puntos')
   await expect(page.getByText(/Historial reciente · 1 resultado/)).toBeVisible()
+  const patientPixels = await page.locator('.surgery-scene-host canvas').evaluate(canvas => {
+    const context = canvas.getContext('2d')
+    if (!context) return 0
+    const image = context.getImageData(420, 210, 160, 180).data
+    let pixels = 0
+    for (let index = 0; index < image.length; index += 4) {
+      if (image[index] > 200 && image[index + 1] > 130 && image[index + 1] < 220 && image[index + 2] > 160) pixels += 1
+    }
+    return pixels
+  })
+  expect(patientPixels).toBeGreaterThan(100)
   for (const viewport of releaseViewports) {
     await page.setViewportSize(viewport)
-    await expect(page.getByRole('heading', { name: 'La aventura terminó con una pérdida' })).toBeVisible()
+    await expect(page.getByRole('heading', { name: 'La misión se detuvo' })).toBeVisible()
     await assertNoHorizontalOverflow(page, viewport)
+    if (viewport.width > 760 && viewport.width / viewport.height > 1.3) {
+      const layout = await page.evaluate(() => {
+        const scene = document.querySelector('.surgery-visual')!.getBoundingClientRect()
+        const panel = document.querySelector('.surgery-control-panel')!.getBoundingClientRect()
+        return { sceneRight: scene.right, panelLeft: panel.left, sceneHeight: scene.height }
+      })
+      expect(layout.sceneRight).toBeLessThanOrEqual(layout.panelLeft + 1)
+      expect(layout.sceneHeight).toBeLessThanOrEqual(viewport.height * 0.63)
+    }
   }
   await page.reload()
   await page.setViewportSize({ width: 1280, height: 720 })
   await page.getByRole('button', { name: /PASO 03/ }).click()
   await page.getByRole('button', { name: 'Ingresar al quirófano' }).click()
-  await expect(page.getByRole('heading', { name: 'La aventura terminó con una pérdida' })).toBeVisible()
+  await expect(page.getByRole('heading', { name: 'La misión se detuvo' })).toBeVisible()
   await page.getByRole('button', { name: 'Volver a operar' }).click()
   await expect(page.getByRole('heading', { name: 'Verificación inicial' })).toBeVisible()
   await expect(page.getByText('0 errores')).toBeVisible()
@@ -249,6 +279,61 @@ test('persists independent audio volumes after browser reload', async ({ page })
   await page.getByRole('button', { name: 'Configuración', exact: true }).click()
   await expect(page.getByRole('slider').first()).toHaveValue(expectedValue)
   await expect(page.getByRole('slider').nth(1)).toHaveValue('0.35')
+})
+
+test('persists night mode across reloads', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Cambiar a tema oscuro (negro)' }).click()
+  await expect(page.locator('.app-shell')).toHaveClass(/night-mode/)
+  await expect(page.locator('.app-shell')).toHaveCSS('background-color', 'rgb(16, 26, 34)')
+  await expect(page.getByRole('button', { name: 'Cambiar a tema claro (blanco)' })).toBeVisible()
+  await page.reload()
+  await expect(page.locator('.app-shell')).toHaveClass(/night-mode/)
+  await page.getByRole('button', { name: 'Cambiar a tema claro (blanco)' }).click()
+  await expect(page.locator('.app-shell')).not.toHaveClass(/night-mode/)
+})
+
+test('opens surgery in fullscreen on demand and exits cleanly', async ({ page }) => {
+  await page.setViewportSize({ width: 844, height: 390 })
+  await prepareSurgery(page)
+  await page.getByRole('button', { name: 'Activar pantalla completa' }).click()
+  await expect(page.locator('.surgery-page:fullscreen')).toBeVisible()
+  await page.getByRole('button', { name: 'Salir de pantalla completa' }).click()
+  await expect(page.locator('.surgery-page:fullscreen')).toHaveCount(0)
+})
+
+test('offers immediate attention to the patient on the reception stretcher', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Mi hospital', exact: true }).click()
+  await expect(page.locator('.hospital-emergency-banner')).toContainText('está en una camilla en recepción')
+  await expect(page.locator('.hospital-scene-wrap canvas')).toBeVisible()
+  await page.getByRole('button', { name: /Atender ahora/ }).click()
+  await expect(page.locator('.crumb')).toContainText('Atención preoperatoria')
+  await expect(page.locator('.hospital-emergency-banner')).toHaveCount(0)
+})
+
+test('moves a waiting patient to the review room and persists the location', async ({ page }) => {
+  await page.goto('/')
+  await page.getByRole('button', { name: 'Mi hospital', exact: true }).click()
+  await expect(page.locator('.hospital-room-chip').filter({ hasText: 'Sala de revisión' })).toContainText('N1')
+
+  const arrival = page.locator('.hospital-patient-card.status-arrived:not(.is-immediate)').first()
+  const patientName = await arrival.locator('.hospital-patient-copy b').innerText()
+  await arrival.getByRole('button', { name: 'Recibir' }).click()
+  const waitingPatient = page.locator('.hospital-patient-card.status-waiting').filter({ hasText: patientName })
+  await waitingPatient.getByRole('button', { name: `Enviar ${patientName} a la sala de revisión` }).click()
+  await expect(waitingPatient).toContainText('Turno en espera')
+
+  const location = async () => page.evaluate(() => {
+    const saved = JSON.parse(localStorage.getItem('mini-hospital-save') ?? '{}')
+    return Object.values(saved.state?.hospital?.patientLocations ?? {})
+  })
+  await expect.poll(location).toContain('review')
+
+  await page.reload()
+  await page.getByRole('button', { name: 'Mi hospital', exact: true }).click()
+  await expect(page.locator('.hospital-room-chip').filter({ hasText: 'Sala de revisión' })).toContainText('N1')
+  await expect.poll(location).toContain('review')
 })
 
 test('keeps the surgery scene visible in portrait orientation', async ({ page }) => {

@@ -65,7 +65,7 @@ describe('sistema visual, recursos y audio', () => {
     expect(isFinalSpriteAvailable('layered-character-generator')).toBe(false)
   })
 
-  it('normaliza volúmenes y persiste las preferencias sin guardar instancias de audio', async () => {
+  it('persiste preferencias de audio y tema sin guardar instancias visuales', async () => {
     expect(normalizeAudioPreferences({ musicVolume: 1.4, effectsVolume: -0.2 })).toEqual({ musicVolume: 1, effectsVolume: 0 })
     const values = new Map<string, string>()
     const storage = {
@@ -75,11 +75,14 @@ describe('sistema visual, recursos y audio', () => {
     }
     const store = createGameStore(storage)
     store.getState().setAudioPreferences({ musicVolume: 0.62, effectsVolume: 0.28 })
+    store.getState().setNightMode(true)
     const serialized = values.get('mini-hospital-save') ?? ''
     expect(serialized).toContain('"audioPreferences":{"musicVolume":0.62,"effectsVolume":0.28}')
+    expect(serialized).toContain('"nightMode":true')
     expect(serialized).not.toContain('AudioContext')
     const restored = createGameStore(storage)
     await restored.persist.rehydrate()
     expect(restored.getState().audioPreferences).toEqual({ musicVolume: 0.62, effectsVolume: 0.28 })
+    expect(restored.getState().nightMode).toBe(true)
   })
 })

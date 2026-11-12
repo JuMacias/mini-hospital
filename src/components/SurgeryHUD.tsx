@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Activity, ArrowRight, Check, CirclePause, Heart, ShieldAlert, Sparkles, Users } from 'lucide-react'
-import { SURGERY_PHASES } from '../game/SurgeryEngine'
+import { getSurgeryErrorPenalty, SURGERY_PHASES } from '../game/SurgeryEngine'
 import type { ComplicationType, SurgeryState } from '../types'
 
 const checklistItems = [
@@ -26,7 +26,10 @@ interface SurgeryHUDProps {
 function ChecklistChallenge({ phaseActions, onAction }: { phaseActions: number; onAction: (quality: 'good' | 'miss') => void }) {
   const [selected, setSelected] = useState<string[]>([])
   const expected = phaseActions === 0 ? ['name', 'team'] : ['team', 'signal']
-  return <div className="challenge-panel"><p>Selecciona los dos elementos que el equipo debe confirmar.</p><div className="challenge-options">{checklistItems.map(item => <button key={item.id} className={selected.includes(item.id) ? 'challenge-option picked' : 'challenge-option'} onClick={() => setSelected(current => current.includes(item.id) ? current.filter(id => id !== item.id) : [...current, item.id])}>{selected.includes(item.id) ? <Check size={15} /> : <span className="option-empty" />}{item.label}</button>)}</div><button className="primary-btn challenge-submit" disabled={selected.length !== 2} onClick={() => onAction(expected.every(id => selected.includes(id)) ? 'good' : 'miss')}>Confirmar selección <ArrowRight size={14} /></button></div>
+  const prompt = phaseActions === 0
+    ? 'Primera comprobación: nombre del paciente y equipo presente.'
+    : 'Segunda comprobación: equipo presente y señal del monitor.'
+  return <div className="challenge-panel"><p>{prompt}</p><div className="challenge-options">{checklistItems.map(item => <button key={item.id} className={selected.includes(item.id) ? 'challenge-option picked' : 'challenge-option'} onClick={() => setSelected(current => current.includes(item.id) ? current.filter(id => id !== item.id) : [...current, item.id])}>{selected.includes(item.id) ? <Check size={15} /> : <span className="option-empty" />}{item.label}</button>)}</div><button className="primary-btn challenge-submit" disabled={selected.length !== 2} onClick={() => onAction(expected.every(id => selected.includes(id)) ? 'good' : 'miss')}>Confirmar selección <ArrowRight size={14} /></button></div>
 }
 
 function CoordinationChallenge({ onAction }: { onAction: (quality: 'good' | 'miss') => void }) {
@@ -53,7 +56,10 @@ function FinalCheckChallenge({ phaseActions, onAction }: { phaseActions: number;
   const [confirmed, setConfirmed] = useState<string[]>([])
   const items = [{ id: 'team', label: 'Equipo coordinado' }, { id: 'patient', label: 'Paciente acompañado' }, { id: 'room', label: 'Sala en calma' }]
   const expected = phaseActions === 0 ? ['team', 'patient'] : ['patient', 'room']
-  return <div className="challenge-panel"><p>Haz las dos comprobaciones finales de la misión.</p><div className="challenge-options">{items.map(item => <button key={item.id} className={confirmed.includes(item.id) ? 'challenge-option picked' : 'challenge-option'} onClick={() => setConfirmed(current => current.includes(item.id) ? current.filter(id => id !== item.id) : [...current, item.id])}>{confirmed.includes(item.id) ? <Check size={15} /> : <span className="option-empty" />}{item.label}</button>)}</div><button className="primary-btn challenge-submit" disabled={confirmed.length !== 2} onClick={() => onAction(expected.every(id => confirmed.includes(id)) ? 'good' : 'miss')}>Comprobar <ArrowRight size={14} /></button></div>
+  const prompt = phaseActions === 0
+    ? 'Primera comprobación: equipo coordinado y paciente acompañado.'
+    : 'Segunda comprobación: paciente acompañado y sala en calma.'
+  return <div className="challenge-panel"><p>{prompt}</p><div className="challenge-options">{items.map(item => <button key={item.id} className={confirmed.includes(item.id) ? 'challenge-option picked' : 'challenge-option'} onClick={() => setConfirmed(current => current.includes(item.id) ? current.filter(id => id !== item.id) : [...current, item.id])}>{confirmed.includes(item.id) ? <Check size={15} /> : <span className="option-empty" />}{item.label}</button>)}</div><button className="primary-btn challenge-submit" disabled={confirmed.length !== 2} onClick={() => onAction(expected.every(id => confirmed.includes(id)) ? 'good' : 'miss')}>Comprobar <ArrowRight size={14} /></button></div>
 }
 
 function ComplicationChallenge({ type, onResolve }: { type: ComplicationType; onResolve: (response: 'coordinate' | 'pause', roll: number) => void }) {
@@ -82,6 +88,7 @@ export function SurgeryHUD({ surgery, onAction, onResolve, onContinue }: Surgery
   const phase = surgery.phase
   return <div className="surgery-hud"><div className="surgery-phase-heading"><div><span className="eyebrow">FASE {phase + 1} DE 4</span><h2>{SURGERY_PHASES[phase]}</h2></div><span className="phase-counter">{surgery.phaseActions}/2 acciones</span></div>
     <div className="phase-track">{SURGERY_PHASES.map((label, index) => <div className={index < phase ? 'phase-step finished' : index === phase ? 'phase-step current' : 'phase-step'} key={label}><i>{index < phase ? <Check size={12} /> : index + 1}</i><span>{label}</span></div>)}</div>
+    <p className="surgery-rule-note">Sigue la indicación del reto: cada error resta {getSurgeryErrorPenalty(surgery.difficulty)} puntos de estabilidad.</p>
     {phase === 0 && <ChecklistChallenge key={`check-${phase}-${surgery.phaseActions}`} phaseActions={surgery.phaseActions} onAction={onAction} />}
     {phase === 1 && <CoordinationChallenge key={`team-${surgery.phaseActions}`} onAction={onAction} />}
     {phase === 2 && <PrecisionChallenge key={`precision-${surgery.phaseActions}`} onAction={onAction} />}
@@ -92,5 +99,5 @@ export function SurgeryHUD({ surgery, onAction, onResolve, onContinue }: Surgery
 
 export function SurgeryAlert({ status }: { status: SurgeryState['status'] }) {
   if (status !== 'FAILURE') return null
-  return <div className="flatline-alert"><Activity size={15} /> Estabilidad agotada. El monitor ha entrado en línea plana.</div>
+  return <div className="flatline-alert"><Activity size={15} /> La estabilidad llegó a cero. La misión se pausó; puedes reintentar.</div>
 }

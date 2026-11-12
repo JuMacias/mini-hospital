@@ -142,7 +142,7 @@ describe('reglas de atención preoperatoria', () => {
       understanding: 65,
     })
     expect(store.getState().conversation).toHaveLength(1)
-    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(6)
+    expect(JSON.parse(values.get('mini-hospital-save') ?? '{}').version).toBe(8)
   })
 
   it('respeta el rechazo aunque la comprensión no alcance el umbral para aceptar', () => {

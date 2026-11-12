@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import Phaser from 'phaser'
-import { ArrowLeft, ArrowRight, BedDouble, Check, ChevronRight, Clock3, Coins, Heart, Lightbulb, LockKeyhole, Minus, Move, Plus, RotateCcw, RotateCw, Sparkles, Star, Trash2, Trees, Users, X } from 'lucide-react'
+import { ArrowLeft, ArrowRight, BedDouble, Check, ChevronRight, Clock3, Coins, Heart, Lightbulb, LockKeyhole, Moon, Minus, Move, Plus, RotateCcw, RotateCw, Sparkles, Star, Sun, Trash2, Trees, Users, X } from 'lucide-react'
 import { staff } from '../data/staff'
 import { patients } from '../data/patients'
 import { Avatar } from './Avatar'
@@ -45,10 +45,13 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
   const [placementMode, setPlacementMode] = useState<{ itemId: string; placementId?: string; roomId?: HospitalRoomId } | null>(null)
   const [placementPreview, setPlacementPreview] = useState<PlacementPreview | null>(null)
   const [placementRotation, setPlacementRotation] = useState(0)
+  const [selectedCharacter, setSelectedCharacter] = useState<{ id: string; name: string } | null>(null)
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string } | null>(null)
   const placementModeRef = useRef(placementMode)
   const {
     doctor, selectedStaff, staffProfiles, hospital, experience, surgeryHistory, coins,
-    roleAssignments, setPatientCareStatus, claimHospitalMission, placeHospitalFurniture,
+    nightMode, setNightMode,
+    roleAssignments, setPatientCareStatus, movePatientToRoom, claimHospitalMission, placeHospitalFurniture,
     uninstallHospitalItem,
     rotateHospitalFurniture, removeHospitalFurniture,
     selectHospitalRoom, purchaseHospitalRoom, purchaseHospitalItem, installHospitalItem, upgradeHospitalRoom,
@@ -74,6 +77,15 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
     if (!hostRef.current) return
     let game: Phaser.Game | undefined
     const handleRoomSelection = (roomId: HospitalRoomId) => selectHospitalRoom(roomId)
+    const handleCharacterSelection = (character: { id: string; name: string }) => {
+      setSelectedPatient(null)
+      setSelectedCharacter(character)
+    }
+    const handlePatientSelection = (patient: { id: string; name: string; status: PatientCareStatus }) => {
+      if (patient.status !== 'waiting') return
+      setSelectedCharacter(null)
+      setSelectedPatient(patient)
+    }
     const syncCurrentData = () => {
       if (sceneDataRef.current) game?.events.emit('hospital:state', sceneDataRef.current)
       if (placementModeRef.current) game?.events.emit('hospital:placement-mode', placementModeRef.current)
@@ -97,10 +109,14 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
       })
       gameRef.current = game
       game.events.on('hospital:room-selected', handleRoomSelection)
+      game.events.on('hospital:character-selected', handleCharacterSelection)
+      game.events.on('hospital:patient-selected', handlePatientSelection)
       game.events.on('hospital:scene-ready', syncCurrentData)
       game.events.on('hospital:placement-preview', handlePlacementPreview)
       game.events.once(Phaser.Core.Events.DESTROY, () => {
         game?.events.off('hospital:room-selected', handleRoomSelection)
+        game?.events.off('hospital:character-selected', handleCharacterSelection)
+        game?.events.off('hospital:patient-selected', handlePatientSelection)
         game?.events.off('hospital:scene-ready', syncCurrentData)
         game?.events.off('hospital:placement-preview', handlePlacementPreview)
       })
@@ -153,6 +169,24 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
   const selectRoom = (roomId: HospitalRoomId) => {
     selectHospitalRoom(roomId)
     setNotice('')
+  }
+  const sendCharacterToRoom = (roomId: HospitalRoomId) => {
+    if (!selectedCharacter || !hospital.unlockedRooms.includes(roomId)) return
+    gameRef.current?.events.emit('hospital:move-character', { id: selectedCharacter.id, roomId })
+    setNotice(`${selectedCharacter.name} se dirige a ${hospitalRooms.find(candidate => candidate.id === roomId)?.name ?? 'la habitación'}.`)
+    setSelectedCharacter(null)
+  }
+  const sendPatientToRoom = (roomId: HospitalRoomId) => {
+    if (!selectedPatient) return
+    const moved = movePatientToRoom(selectedPatient.id, roomId)
+    setNotice(moved
+      ? `${selectedPatient.name} se trasladó a ${hospitalRooms.find(candidate => candidate.id === roomId)?.name ?? 'la sala'}.`
+      : 'Solo puedes trasladar pacientes en espera a una sala disponible.')
+    setSelectedPatient(null)
+  }
+  const sendQueuedPatientToReview = (patientId: string, patientName: string) => {
+    const moved = movePatientToRoom(patientId, 'review')
+    setNotice(moved ? `${patientName} se trasladó a Sala de revisión.` : 'Solo puedes trasladar pacientes en espera.')
   }
   const startPlacement = (itemId: string, placementId?: string) => {
     const selectedPlacement = hospital.furniture.find(item => item.id === placementId)
@@ -212,6 +246,8 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
   }
   const placementItem = placementMode ? hospitalItems.find(item => item.id === placementMode.itemId) : undefined
   const nextPatient = hospital.careQueue.find(item => ['waiting', 'declined'].includes(item.status))
+  const immediateCase = hospital.careQueue.find(item => item.priority === 'immediate' && item.status === 'arrived')
+  const immediatePatient = immediateCase ? patients.find(item => item.id === immediateCase.patientId) : undefined
   const roomPlacements = hospital.furniture.filter(item => item.roomId === room.id)
 
   const pendingDetails = pendingPurchase?.kind === 'room'
@@ -234,7 +270,12 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
     <button className="back-link" onClick={onBack}><ArrowLeft size={16} /> Volver al hospital principal</button>
     <div className="hospital-heading">
       <div><div className="eyebrow">TU ESPACIO, TU AVENTURA</div><h1>Mi Hospital</h1><p className="subtitle">Recorre, personaliza y amplía tu hospital con las monedas de tus aventuras.</p></div>
-      <div className="hospital-wallet"><span><Coins size={16} />{coins}<small>MONEDAS</small></span><span><Sparkles size={16} />{experience}<small>EXPERIENCIA</small></span></div>
+      <div className="hospital-header-actions">
+        <button type="button" className="hospital-night-toggle" aria-pressed={nightMode} onClick={() => setNightMode(!nightMode)}>
+          {nightMode ? <Sun size={15} /> : <Moon size={15} />}{nightMode ? 'Tema claro · blanco' : 'Tema oscuro · negro'}
+        </button>
+        <div className="hospital-wallet"><span><Coins size={16} />{coins}<small>MONEDAS</small></span><span><Sparkles size={16} />{experience}<small>EXPERIENCIA</small></span></div>
+      </div>
     </div>
     <div className="hospital-level-card">
       <div className="hospital-level-medal"><HospitalIcon /></div>
@@ -249,19 +290,26 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
           <span><b>{careCounts.preparation}</b>Preparados</span><span><b>{careCounts.surgery}</b>En cirugía</span>
           <span><b>{careCounts.recovery}</b>En recuperación</span><span><b>{careCounts.finished}</b>Finalizados</span>
         </div>
+        {immediatePatient && <div className="hospital-emergency-banner" role="status">
+          <Heart size={20} />
+          <div><b>Atención inmediata solicitada</b><span>{immediatePatient.name} está en una camilla en recepción y pide ayuda.</span></div>
+          <button onClick={() => onStartPreop(immediatePatient.id)}>Atender ahora <ArrowRight size={14} /></button>
+        </div>}
         <div className="hospital-patient-list">
           {hospital.careQueue.map((care, index) => {
             const patient = patients.find(item => item.id === care.patientId)
             if (!patient) return null
+            const immediate = care.priority === 'immediate' && care.status === 'arrived'
             const waitMinutes = Math.max(1, index + 1)
-            return <article className={`hospital-patient-card status-${care.status}`} key={care.id}>
+            return <article className={`hospital-patient-card status-${care.status} ${immediate ? 'is-immediate' : ''}`} key={care.id}>
               <div className="hospital-patient-avatar"><Avatar color={patient.uniform} hair={patient.hair} skin={patient.skin} hairStyle={patient.hairStyle} accessory={patient.accessory} motion={care.status === 'failed' ? 'sad' : care.status === 'consultation' ? 'talk' : 'idle'} /></div>
-              <div className="hospital-patient-copy"><div><b>{patient.name}</b><span>{patient.age} años</span></div><small>{patient.reason}</small><span className="hospital-care-status">{careStatusLabels[care.status]}</span></div>
+              <div className="hospital-patient-copy"><div><b>{patient.name}</b><span>{patient.age} años</span></div><small>{patient.reason}</small><span className="hospital-care-status">{immediate ? 'Atención inmediata solicitada' : careStatusLabels[care.status]}</span></div>
               <div className="hospital-patient-action">
                 {(care.status === 'arrived' || care.status === 'waiting') && <small><Clock3 size={12} /> {care.status === 'arrived' ? `Espera ficticia: ${waitMinutes} min` : 'Turno en espera'}</small>}
                 {care.status === 'failed' && <small className="care-failure-note">La aventura fallida no se registra como alta.</small>}
-                {care.status === 'arrived' && <button onClick={() => patientAction(patient.id, care.status)}>Recibir</button>}
+                {care.status === 'arrived' && !immediate && <button onClick={() => patientAction(patient.id, care.status)}>Recibir</button>}
                 {care.status === 'waiting' && <button onClick={() => patientAction(patient.id, care.status)}>Atender</button>}
+                {care.status === 'waiting' && hospital.patientLocations[patient.id] !== 'review' && <button aria-label={`Enviar ${patient.name} a la sala de revisión`} onClick={() => sendQueuedPatientToReview(patient.id, patient.name)}>Revisión</button>}
                 {care.status === 'declined' && <button onClick={() => patientAction(patient.id, care.status)}>Volver a explicar</button>}
                 {care.status === 'recovery' && <button onClick={() => patientAction(patient.id, care.status)}>Dar alta</button>}
               </div>
@@ -286,7 +334,29 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
     </section>
     <div className="hospital-workspace">
       <div className="hospital-map-card">
-        <div className="hospital-map-toolbar"><div><b>Explora tus espacios</b><span>Arrastra para recorrer · usa la rueda o los controles para acercar</span></div><div className="hospital-zoom-controls"><button aria-label="Alejar mapa" onClick={() => gameRef.current?.events.emit('hospital:zoom', -0.12)}><Minus size={16} /></button><button aria-label="Acercar mapa" onClick={() => gameRef.current?.events.emit('hospital:zoom', 0.12)}><Plus size={16} /></button><button aria-label="Centrar mapa" onClick={() => gameRef.current?.events.emit('hospital:camera-reset')}><RotateCcw size={15} /></button></div></div>
+        <div className="hospital-map-toolbar"><div><b>Explora tus espacios</b><span>Toca al personal o a un paciente en espera para elegir su destino · arrastra para recorrer</span></div><div className="hospital-zoom-controls"><button aria-label="Alejar mapa" onClick={() => gameRef.current?.events.emit('hospital:zoom', -0.12)}><Minus size={16} /></button><button aria-label="Acercar mapa" onClick={() => gameRef.current?.events.emit('hospital:zoom', 0.12)}><Plus size={16} /></button><button aria-label="Centrar mapa" onClick={() => gameRef.current?.events.emit('hospital:camera-reset')}><RotateCcw size={15} /></button></div></div>
+        {selectedCharacter && <div className="hospital-person-destinations" role="group" aria-label={`Elegir sala para ${selectedCharacter.name}`}>
+          <div><b>{selectedCharacter.name}</b><span>¿A qué sala quieres enviarlo?</span></div>
+          <div className="hospital-destination-list">{hospitalRooms.map(candidate => {
+            const unlocked = hospital.unlockedRooms.includes(candidate.id)
+            return <button key={candidate.id} type="button" disabled={!unlocked} onClick={() => sendCharacterToRoom(candidate.id)}>
+              {candidate.name}{!unlocked && <LockKeyhole size={11} />}
+            </button>
+          })}</div>
+          <button type="button" className="hospital-destination-cancel" aria-label="Cancelar movimiento" onClick={() => setSelectedCharacter(null)}><X size={15} /></button>
+        </div>}
+        {selectedPatient && <div className="hospital-person-destinations" role="group" aria-label={`Elegir sala para ${selectedPatient.name}`}>
+          <div><b>{selectedPatient.name}</b><span>Paciente en espera · elige su sala</span></div>
+          <div className="hospital-destination-list">
+            {(['waiting', 'review'] as const).map(roomId => {
+              const destination = hospitalRooms.find(candidate => candidate.id === roomId)
+              return <button key={roomId} type="button" disabled={!hospital.unlockedRooms.includes(roomId)} onClick={() => sendPatientToRoom(roomId)}>
+                {destination?.name ?? roomId}
+              </button>
+            })}
+          </div>
+          <button type="button" className="hospital-destination-cancel" aria-label="Cancelar movimiento del paciente" onClick={() => setSelectedPatient(null)}><X size={15} /></button>
+        </div>}
         <div className="hospital-scene-wrap"><div className="hospital-scene-host" ref={hostRef} aria-label="Mapa isométrico interactivo del hospital" /><div className="hospital-scene-error" ref={sceneErrorRef} role="alert" hidden /></div>
         <div className="hospital-room-strip" aria-label="Habitaciones">
           {hospitalRooms.map(candidate => {
@@ -296,7 +366,7 @@ export function HospitalPage({ onStartPreop, onBack }: { onStartPreop: (patientI
             </button>
           })}
         </div>
-        <p className="hospital-art-note"><span className="hospital-art-dot" /> Personajes y mobiliario son ilustraciones vectoriales originales generadas por Phaser; el arte final de habitaciones aún está pendiente.</p>
+        <p className="hospital-art-note"><span className="hospital-art-dot" /> Las habitaciones tienen decoración y puertas ilustradas; el arte final detallado aún está pendiente.</p>
       </div>
       <aside className="hospital-room-panel">
         <div className="hospital-room-panel-title">
