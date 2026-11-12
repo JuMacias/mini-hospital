@@ -56,21 +56,23 @@ function OptionButton({
   option,
   active,
   locked,
+  disabled,
   onClick,
 }: {
   option: AppearanceOption
   active: boolean
   locked?: boolean
+  disabled?: boolean
   onClick: () => void
 }) {
   return <button
     type="button"
-    className={`team-style-option ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}
+    className={`team-style-option ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''} ${disabled ? 'is-disabled' : ''}`}
     aria-label={`${option.label}${locked ? ' (bloqueado)' : ''}`}
     aria-pressed={active}
-    disabled={locked}
+    disabled={locked || disabled}
     onClick={onClick}
-    title={locked ? 'Se desbloquea al subir de nivel' : option.label}
+    title={locked ? 'Se desbloquea al subir de nivel' : disabled ? 'La personalización se habilita al terminar la cirugía' : option.label}
   >
     {option.color ? <i style={{ backgroundColor: option.color }} /> : <span>{option.label}</span>}
     {active && <Check size={13} />}
@@ -289,7 +291,7 @@ export function TeamPage({ onBack, onNotify }: { onBack: () => void; onNotify: (
             {visibleOptions.map(option => {
               const requiredLevel = staffAccessoryUnlockLevel(option.field, option.value)
               const lockedOption = requiredLevel !== null && activeView.level < requiredLevel && activeView.appearance[option.field] !== option.value
-              return <OptionButton key={option.id} option={option} active={activeView.appearance[option.field] === option.value} locked={lockedOption} onClick={() => selectOption(option)} />
+              return <OptionButton key={option.id} option={option} active={activeView.appearance[option.field] === option.value} locked={lockedOption} disabled={locked} onClick={() => selectOption(option)} />
             })}
           </div>
         </div>

@@ -21,12 +21,198 @@
   border-color: #2c414b;
 }
 
+.app-shell.night-mode .advanced-team-page .team-roster-panel,
+.app-shell.night-mode .advanced-team-page .team-catalog-panel,
+.app-shell.night-mode .advanced-team-page .team-profile-panel {
+  background-color: #2c3338;
+  border-color: #454e54;
+  color: #e4eaec;
+}
+
+.app-shell.night-mode .advanced-team-page .team-roster-slot {
+  background: #373f45;
+  border-color: #4a545b;
+}
+
+.app-shell.night-mode .advanced-team-page .team-roster-slot.slot-filled {
+  background: linear-gradient(110deg, #3d454b, #373f45);
+  border-color: #525c63;
+}
+
+.app-shell.night-mode .advanced-team-page .team-slot-avatar {
+  background: #e4e7e8;
+}
+
+.app-shell.night-mode .advanced-team-page .team-slot-empty {
+  background: #454e54;
+  color: #a9b6ba;
+}
+
+.app-shell.night-mode .advanced-team-page .team-slot-select {
+  background: transparent !important;
+}
+
+.app-shell.night-mode .advanced-team-page .team-remove-button {
+  background: #4a383c;
+  color: #f0b4bb;
+}
+
+.app-shell.night-mode .advanced-team-page .team-remove-button:hover {
+  background: #5a4347;
+}
+
+.app-shell.night-mode .advanced-team-page .team-professional-card {
+  background: linear-gradient(145deg, #373f45, #2f363b);
+  border-color: #4a545b;
+  color: #d8e2e4;
+}
+
+.app-shell.night-mode .advanced-team-page .team-professional-card.is-selected {
+  border-color: #73c4ac;
+  background: linear-gradient(145deg, #30433d, #2b3a36);
+  box-shadow: inset 0 0 0 1px #73c4ac, 0 0 0 4px #73c4ac22;
+}
+
+.app-shell.night-mode .advanced-team-page .team-professional-card.is-focused {
+  outline-color: #73c4ac;
+  box-shadow: 0 0 0 5px #73c4ac1f;
+}
+
+.app-shell.night-mode .advanced-team-page .team-professional-card:hover {
+  border-color: #73c4ac;
+  box-shadow: 0 10px 22px #0006;
+  transform: translateY(-3px) scale(1.015);
+}
+
+.app-shell.night-mode .advanced-team-page .team-card-avatar {
+  background: radial-gradient(circle at 50% 67%, #3c524b, #2d3a38 70%);
+  box-shadow: inset 0 0 0 1px #4a615a;
+}
+
+.app-shell.night-mode .advanced-team-page .team-card-check {
+  background: #45525a;
+  color: #b7c7c7;
+}
+
+.app-shell.night-mode .advanced-team-page .is-selected .team-card-check {
+  background: #65bd9e;
+  color: #10231c;
+  box-shadow: 0 0 0 3px #65bd9e33;
+}
+
+.app-shell.night-mode .advanced-team-page .team-card-specialty {
+  color: #a7bab4;
+}
+
+.app-shell.night-mode .advanced-team-page .team-card-meta {
+  color: #8fcdb6;
+}
+
+.app-shell.night-mode .advanced-team-page .team-professional-card b,
+.app-shell.night-mode .advanced-team-page .team-roster-slot b,
+.app-shell.night-mode .advanced-team-page .team-performance-block,
+.app-shell.night-mode .advanced-team-page .team-customization-heading {
+  color: #e4eaec;
+}
+
+.app-shell.night-mode .advanced-team-page .team-completion-note {
+  background: #423a2c;
+  color: #e3c07a;
+}
+
+.app-shell.night-mode .advanced-team-page .team-completion-note.is-valid {
+  background: #2d3f38;
+  color: #8fd9b9;
+}
+
+.app-shell.night-mode .advanced-team-page .team-completion-note small {
+  color: #a9b6ba;
+}
+
+.app-shell.night-mode .advanced-team-page .team-factor-chips span {
+  background: #3d454b;
+  color: #bac8cb;
+}
+
+.app-shell.night-mode .advanced-team-page .team-favorite-actions button,
+.app-shell.night-mode .advanced-team-page .team-rest-button,
+.app-shell.night-mode .advanced-team-page .team-editor-tabs button,
+.app-shell.night-mode .advanced-team-page .team-style-option {
+  color: #c7d4d6;
+  background: #3d454b;
+  border: 1px solid #4e575d;
+}
+
+.app-shell.night-mode .advanced-team-page .team-favorite-actions button:hover:not(:disabled),
+.app-shell.night-mode .advanced-team-page .team-rest-button:hover:not(:disabled),
+.app-shell.night-mode .advanced-team-page .team-editor-tabs button:hover:not(:disabled),
+.app-shell.night-mode .advanced-team-page .team-style-option:hover:not(:disabled) {
+  background: #4a545b;
+  border-color: #73c4ac;
+}
+
+.app-shell.night-mode .advanced-team-page .team-editor-tabs button.is-active,
+.app-shell.night-mode .advanced-team-page .team-style-option.is-active {
+  background: #30433d;
+  border-color: #73c4ac;
+  color: #a4e9cf;
+}
+
+.app-shell.night-mode .advanced-team-page .team-style-option > i {
+  border-color: #4e575d;
+  box-shadow: 0 0 0 1px #373f45;
+}
+
+.app-shell.night-mode .advanced-team-page .team-favorite-actions button:disabled,
+.app-shell.night-mode .advanced-team-page .team-rest-button:disabled,
+.app-shell.night-mode .advanced-team-page .team-style-option:disabled {
+  color: #7c898d;
+  background: #343b40;
+  border-color: #454e54;
+}
+
+.app-shell.night-mode .advanced-team-page .team-count-pill,
+.app-shell.night-mode .advanced-team-page .team-level-badge {
+  background: #3d454b;
+  color: #c6e8df;
+}
+
+.app-shell.night-mode .advanced-team-page .team-name-field input,
+.app-shell.night-mode .advanced-team-page select {
+  color: #e4eaec;
+  background-color: #373f45;
+  border-color: #4a545b;
+}
+
+.app-shell.night-mode .advanced-team-page .team-character-stage {
+  background: radial-gradient(ellipse at 50% 75%, #3f4c47 0, #353f3d 50%, #2f373a 80%);
+  border-color: #4a545b;
+}
+
+.app-shell.night-mode .advanced-team-page .team-unlock-note {
+  color: #d1ab5e;
+}
+
 .app-shell.night-mode [class*="card"],
 .app-shell.night-mode [class*="panel"],
 .app-shell.night-mode [class*="modal"],
 .app-shell.night-mode [class*="dialog"],
 .app-shell.night-mode [class*="option"] {
   border-color: #314751;
+}
+
+.app-shell.night-mode [class*="card"]:not(.hero-card),
+.app-shell.night-mode [class*="panel"],
+.app-shell.night-mode [class*="modal"],
+.app-shell.night-mode [class*="dialog"],
+.app-shell.night-mode .appearance-card {
+  background-color: #1b2b35;
+  color: #dce8eb;
+}
+
+.app-shell.night-mode .hero-card,
+.app-shell.night-mode .hero-art {
+  color: #35575c;
 }
 
 .app-shell.night-mode .setup-card,
@@ -85,6 +271,7 @@
 
 .app-shell.night-mode .icon-btn,
 .app-shell.night-mode .secondary-btn,
+.app-shell.night-mode button:not(.primary-btn):not(.setup-card):not(.team-professional-card):not(.team-style-option):not(.team-editor-tabs button):not(.team-slot-select):not(.team-remove-button):not(.team-rest-button):not(.team-favorite-actions button),
 .app-shell.night-mode .text-input,
 .app-shell.night-mode input:not([type="range"]),
 .app-shell.night-mode select,
@@ -92,6 +279,10 @@
   color: #e2ecef;
   background: #1d303a;
   border-color: #3a535e;
+}
+
+.app-shell.night-mode button:not(:disabled):hover {
+  filter: brightness(1.12);
 }
 
 .app-shell.night-mode .surgery-phase-heading h2,
