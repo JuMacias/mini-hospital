@@ -1,0 +1,3 @@
+.character-renderer-idle .character-arm-left{transform-box:fill-box;transform-origin:100% 0;animation:character-arm-left 2.8s ease-in-out infinite}.character-renderer-idle .character-arm-right{transform-box:fill-box;transform-origin:0 0;animation:character-arm-right 2.8s ease-in-out infinite}@keyframes character-arm-left{0%,100%{transform:rotate(0)}50%{transform:rotate(-2.2deg)}}@keyframes character-arm-right{0%,100%{transform:rotate(0)}50%{transform:rotate(2.2deg)}}
+.creator-preview-label{background:#ffffffbd}
+.character-renderer-static *{animation:none!important}

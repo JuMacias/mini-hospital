@@ -1,0 +1,147 @@
+.hospital-page{width:min(100%,1500px);padding-top:17px}
+.hospital-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin:10px 0 16px}
+.hospital-heading h1{margin:4px 0 2px;color:#344e59;font:900 27px Nunito,sans-serif}
+.hospital-heading .subtitle{max-width:620px}
+.hospital-wallet{display:flex;gap:9px}
+.hospital-wallet>span{display:grid;grid-template-columns:18px auto;align-items:center;column-gap:5px;min-width:102px;padding:9px 12px;border:1px solid #e8efeb;border-radius:13px;background:#fff;color:#347967;font-size:15px;font-weight:900;box-shadow:0 6px 16px #426d5b0b}
+.hospital-wallet>span:nth-child(2){color:#8c78bd}
+.hospital-wallet small{grid-column:2;font-size:8px;letter-spacing:.6px;color:#8da19a}
+.hospital-level-card{display:flex;align-items:center;gap:13px;padding:13px 16px;margin-bottom:15px;border:1px solid #e6efe9;border-radius:16px;background:linear-gradient(100deg,#fff,#f8fcf9);box-shadow:0 8px 20px #5473660a}
+.hospital-level-medal{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:13px;background:#e6f5ee;color:#4ba386}
+.hospital-icon-cross{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#65b69b;color:#fff;font:900 23px/1 Nunito,sans-serif}
+.hospital-level-copy{display:grid;flex:1;gap:2px;min-width:0}
+.hospital-level-copy>b{color:#3c5a51;font-size:13px}
+.hospital-level-copy>span,.hospital-level-copy>small{color:#8a9c95;font-size:9px}
+.hospital-xp-track{height:6px;margin:4px 0 2px;overflow:hidden;border-radius:9px;background:#e8efeb}
+.hospital-xp-track i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#78cfb0,#73a9d4);transition:width .35s ease}
+.hospital-level-tag{padding:7px 10px;border-radius:18px;background:#f0eafa;color:#8a72b7;font-size:8px;font-weight:900;letter-spacing:.6px}
+.hospital-workspace{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(345px,.8fr);align-items:stretch;gap:14px}
+.hospital-map-card,.hospital-room-panel{min-width:0;overflow:hidden;border:1px solid #e7efeb;border-radius:16px;background:#fff;box-shadow:0 8px 22px #486b5b0c}
+.hospital-map-toolbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:13px 15px;border-bottom:1px solid #edf2ef}
+.hospital-map-toolbar>div:first-child{display:grid;gap:3px}
+.hospital-map-toolbar b{color:#435d55;font-size:12px}
+.hospital-map-toolbar span{color:#93a49d;font-size:9px}
+.hospital-zoom-controls{display:flex;flex:0 0 auto;gap:5px}
+.hospital-zoom-controls button{display:grid;place-items:center;width:30px;height:29px;border:1px solid #e2ece7;border-radius:9px;background:#f9fcfa;color:#548c7a;cursor:pointer;transition:background .16s,transform .16s}
+.hospital-zoom-controls button:hover{background:#e8f6ef;transform:translateY(-1px)}
+.hospital-scene-wrap{position:relative;height:510px;overflow:hidden;background:#eff7f3}
+.hospital-scene-host{width:100%;height:100%;touch-action:none;cursor:grab}
+.hospital-scene-host:active{cursor:grabbing}
+.hospital-scene-host canvas{display:block;width:100%!important;height:100%!important;touch-action:none}
+.hospital-scene-error{position:absolute;inset:15px auto auto 15px;z-index:2;max-width:calc(100% - 30px);padding:10px 12px;border-radius:10px;background:#fff0ee;color:#9b4e52;font-size:11px}
+.hospital-room-strip{display:flex;gap:6px;padding:11px 12px;overflow:auto;border-top:1px solid #edf2ef;scrollbar-width:thin}
+.hospital-room-chip{display:flex;align-items:center;gap:5px;flex:0 0 auto;padding:7px 9px;border:1px solid #e8efeb;border-radius:20px;background:#fff;color:#71857d;font-size:9px;font-weight:700;cursor:pointer;transition:all .16s}
+.hospital-room-chip small{padding:2px 4px;border-radius:10px;background:#edf7f2;color:#39856d;font-size:8px}
+.hospital-room-chip.selected{border-color:#71c5a8;background:#ecf8f2;color:#347c68;box-shadow:0 0 0 2px #82c9ad20}
+.hospital-room-chip.locked{color:#a3978c;background:#faf9f7}
+.hospital-art-note{display:flex;align-items:center;gap:7px;margin:0;padding:0 14px 12px;color:#9aa8a2;font-size:8px;line-height:1.45}
+.hospital-art-dot{width:6px;height:6px;flex:0 0 auto;border-radius:50%;background:#83bfa6}
+.hospital-room-panel{position:relative;display:flex;flex-direction:column;max-height:680px;overflow-y:auto;padding:16px}
+.hospital-room-panel-title{display:flex;align-items:center;gap:10px}
+.hospital-room-icon{display:grid;place-items:center;width:39px;height:39px;border-radius:12px;background:#e9f7f0;color:#55a385}
+.hospital-room-icon.locked{background:#f8f1e9;color:#b29278}
+.hospital-room-panel-title .field-label{font-size:8px}
+.hospital-room-panel-title h2{margin:1px 0 0;color:#3c554d;font:900 17px Nunito,sans-serif}
+.hospital-room-description{margin:9px 0 12px;color:#85968f;font-size:10px;line-height:1.55}
+.room-level-summary{display:flex;justify-content:space-between;padding:9px 10px;border-radius:9px;background:#f7faf8;color:#73867e;font-size:9px}
+.room-level-summary b{color:#43816d}
+.hospital-upgrade-button,.hospital-start-button{display:flex;align-items:center;justify-content:center;gap:7px;width:100%;min-height:37px;margin-top:8px;padding:8px 10px;border:1px solid #cce8da;border-radius:10px;background:#edf8f2;color:#39856d;font-size:10px;font-weight:800;cursor:pointer;transition:filter .15s,transform .15s}
+.hospital-upgrade-button svg:last-child{margin-left:auto}
+.hospital-upgrade-button:hover:not(:disabled),.hospital-start-button:hover:not(:disabled){filter:brightness(.97);transform:translateY(-1px)}
+.hospital-upgrade-button:disabled,.hospital-start-button:disabled{opacity:.55;cursor:not-allowed;transform:none}
+.hospital-start-button{margin:10px 0;border:0;background:linear-gradient(100deg,#61b89b,#74c8ad);color:#fff;box-shadow:0 6px 14px #61b89b20}
+.hospital-shop-heading{display:flex;justify-content:space-between;margin:16px 0 8px}
+.hospital-shop-heading>div{display:grid;gap:2px}
+.hospital-shop-heading b{color:#425c52;font-size:12px}
+.hospital-shop-heading small{color:#9aa8a1;font-size:9px}
+.hospital-category-row{display:flex;gap:5px;margin:0 -1px 9px;overflow:auto;padding:2px 1px 5px;scrollbar-width:thin}
+.hospital-category-row button{display:flex;align-items:center;gap:4px;flex:0 0 auto;padding:6px 8px;border:1px solid #e8efeb;border-radius:18px;background:#fff;color:#83948c;font-size:8px;font-weight:700;cursor:pointer}
+.hospital-category-row button.active{border-color:#a9d9c4;background:#eef8f3;color:#43836e}
+.hospital-item-list{display:grid;gap:7px}
+.hospital-item-card{display:grid;grid-template-columns:41px minmax(0,1fr) repeat(3,auto);align-items:center;gap:8px;padding:8px;border:1px solid #edf1ef;border-radius:11px;background:#fff;transition:border-color .15s,background .15s}
+.hospital-item-card.installed{border-color:#a8dbc5;background:#f7fcf9}
+.hospital-item-swatch{display:grid;place-items:center;width:39px;height:39px;overflow:hidden;border:1px solid #e6efea;border-radius:10px;background:#f1f8f4;color:#82a998}
+.hospital-item-swatch.swatch-wall{border-color:#e5e9e6}
+.hospital-item-swatch.swatch-floor{background:#f4efe5}
+.hospital-item-swatch.swatch-chair,.hospital-item-swatch.swatch-table{background:#f2eff8;color:#9680be}
+.hospital-item-swatch.swatch-bed{background:#eaf4f8;color:#79a9ba}
+.floor-sample{width:26px;height:22px;border-radius:5px;background:repeating-linear-gradient(45deg,#d2b88e 0 4px,#ebddc0 4px 8px)}
+.floor-sample.checker{background:conic-gradient(#c9bddc 25%,#f3edf8 0 50%,#c9bddc 0 75%,#f3edf8 0);background-size:12px 12px}
+.floor-sample.mint{background:linear-gradient(135deg,#d9eae1,#eff7f1)}
+.hospital-item-copy{display:grid;gap:2px;min-width:0}
+.hospital-item-copy b{overflow:hidden;color:#526960;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.hospital-item-copy span{color:#93a099;font-size:8px;line-height:1.35}
+.hospital-item-copy small{color:#6e9a87;font-size:8px;font-weight:700}
+.buy-item-button,.install-item-button{display:flex;align-items:center;justify-content:center;gap:3px;min-width:50px;padding:7px 8px;border:0;border-radius:8px;background:#eaf7f0;color:#3e8b71;font-size:8px;font-weight:800;cursor:pointer}
+.buy-item-button:disabled{background:#f2f2ef;color:#a49c90;cursor:not-allowed}
+.install-item-button{border:1px solid #dfece5;background:#fff}
+.installed-badge{display:flex;align-items:center;gap:3px;padding:5px 6px;border-radius:12px;background:#e7f6ed;color:#43836d;font-size:8px;font-weight:800}
+.hospital-unlock-panel{display:grid;gap:9px;margin-top:6px;padding:13px;border:1px solid #eee9df;border-radius:12px;background:#fffdfa}
+.hospital-unlock-panel>b{margin-bottom:2px;color:#665d50;font-size:11px}
+.unlock-condition{display:flex;justify-content:space-between;gap:8px;color:#988e80;font-size:9px}
+.unlock-condition strong{color:#6e8278;text-align:right}
+.hospital-requirement-note{color:#9c8b7b;font-size:8px;line-height:1.4}
+.hospital-notice{margin-top:9px;padding:8px 10px;border-radius:9px;background:#eff8f2;color:#43836d;font-size:9px;line-height:1.45}
+.hospital-confirm-backdrop{position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:18px;background:#263a3588;backdrop-filter:blur(3px)}
+.hospital-confirm-dialog{width:min(100%,350px);padding:21px;border:1px solid #e3eee8;border-radius:18px;background:#fff;box-shadow:0 20px 60px #253c3440}
+.confirm-emblem{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#eaf7ef;color:#50a081}
+.hospital-confirm-dialog h3{margin:12px 0 4px;color:#3d5a50;font:900 17px Nunito,sans-serif}
+.hospital-confirm-dialog p,.hospital-confirm-dialog small{color:#8a9b93;font-size:10px;line-height:1.5}
+.hospital-confirm-dialog p{margin:0 0 12px}
+.confirm-price{display:flex;justify-content:space-between;padding:10px 0;border-top:1px solid #edf2ef;border-bottom:1px solid #edf2ef;color:#82948a;font-size:10px}
+.confirm-price b{color:#43856e}
+.confirm-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:14px}
+.confirm-actions button{display:flex;align-items:center;gap:5px;padding:8px 11px;border:1px solid #e2ebe6;border-radius:9px;background:#fff;color:#75867e;font-size:10px;font-weight:800;cursor:pointer}
+.confirm-actions button:last-child{border-color:#68b99b;background:#68b99b;color:#fff}
+.confirm-actions button:disabled{opacity:.48;cursor:not-allowed}
+.hospital-footer-note{display:flex;align-items:center;gap:8px;margin:12px 2px 0;color:#8c9d95;font-size:9px;line-height:1.45}
+.hospital-footer-note svg{flex:0 0 auto;color:#79ad98}
+.hospital-operations{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(280px,.8fr);gap:14px;margin-bottom:15px}
+.hospital-queue,.hospital-missions{min-width:0;padding:14px;border:1px solid #e7efeb;border-radius:16px;background:#fff;box-shadow:0 8px 22px #486b5b0c}
+.hospital-operations-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.hospital-operations-heading h2{margin:2px 0 0;color:#3c554d;font:900 15px Nunito,sans-serif}
+.hospital-operations-heading>span{color:#8a9b93;font-size:9px}
+.hospital-queue-counts{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:5px;margin-bottom:9px}
+.hospital-queue-counts span{display:grid;gap:2px;padding:7px 5px;border-radius:8px;background:#f5faf7;color:#869a90;text-align:center;font-size:7px}
+.hospital-queue-counts b{color:#4a9279;font-size:12px}
+.hospital-patient-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+.hospital-patient-card{display:grid;grid-template-columns:40px minmax(0,1fr) auto;align-items:center;gap:7px;min-width:0;padding:8px;border:1px solid #edf2ef;border-radius:11px;background:#fbfdfc}
+.hospital-patient-avatar{width:38px;height:46px;overflow:hidden}
+.hospital-patient-copy{display:grid;gap:2px;min-width:0}
+.hospital-patient-copy>div{display:flex;align-items:baseline;gap:5px;min-width:0}
+.hospital-patient-copy b{overflow:hidden;color:#526960;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.hospital-patient-copy>div span,.hospital-patient-copy>small{color:#96a49d;font-size:7px}
+.hospital-patient-copy>small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hospital-care-status{color:#498d75;font-size:7px;font-weight:800}
+.hospital-patient-action{display:grid;justify-items:end;gap:4px}
+.hospital-patient-action>small{display:flex;align-items:center;gap:3px;color:#90a198;font-size:7px;text-align:right}
+.hospital-patient-action>.care-failure-note{max-width:92px;color:#a97778;line-height:1.35}
+.hospital-patient-action button,.hospital-mission button,.furniture-move-button,.hospital-placement-panel button,.hospital-placed-list button{display:flex;align-items:center;justify-content:center;gap:4px;padding:6px 8px;border:1px solid #d5ecdf;border-radius:8px;background:#eff8f3;color:#40876f;font-size:8px;font-weight:800;cursor:pointer}
+.hospital-patient-action button:hover,.hospital-mission button:hover:not(:disabled),.hospital-placement-panel button:hover:not(:disabled){background:#e2f4e9}
+.hospital-mission-list{display:grid;gap:6px}
+.hospital-mission{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:7px 8px;border:1px solid #edf2ef;border-radius:9px;background:#fbfdfc}
+.hospital-mission>div{display:grid;gap:2px}
+.hospital-mission b{color:#536b61;font-size:8px}
+.hospital-mission span,.hospital-mission small{color:#93a198;font-size:7px;line-height:1.35}
+.hospital-mission small{color:#62987f;font-weight:700}
+.hospital-mission.claimed{background:#f5faf7}
+.hospital-mission button{min-width:49px;white-space:nowrap}
+.hospital-mission button:disabled{opacity:.55;cursor:not-allowed}
+.furniture-move-button,.furniture-remove-button{display:flex;align-items:center;justify-content:center;gap:3px;padding:5px 6px;border:1px solid #dfece5;border-radius:8px;background:#fff;color:#5d8a76;font-size:8px;font-weight:800;cursor:pointer}
+.furniture-remove-button{min-width:26px;color:#a67575}
+.hospital-placed-list{display:grid;gap:6px;margin-top:12px}
+.hospital-placed-list>b{color:#536b61;font-size:10px}
+.hospital-placed-list>div{display:grid;grid-template-columns:minmax(0,1fr) repeat(3,30px);align-items:center;gap:5px;padding:6px 7px;border:1px solid #edf2ef;border-radius:8px;color:#71857c;font-size:8px}
+.hospital-placed-list>div span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hospital-placed-list button{width:28px;height:27px;padding:0}
+.hospital-placement-panel{display:grid;gap:8px;margin-top:11px;padding:10px;border:1px solid #b9e2cd;border-radius:10px;background:#f1faf5}
+.hospital-placement-panel>div:first-child{display:grid;gap:3px}
+.hospital-placement-panel b{color:#3f7965;font-size:10px}
+.hospital-placement-panel span{color:#7b978a;font-size:8px;line-height:1.4}
+.hospital-placement-panel>div:last-child{display:flex;flex-wrap:wrap;gap:5px}
+.hospital-placement-panel button:disabled{opacity:.5;cursor:not-allowed}
+.hospital-placement-panel button:last-child{border-color:#e8dcdc;background:#fff8f8;color:#9a7171}
+@media(max-width:1100px){.hospital-workspace{grid-template-columns:minmax(0,1.2fr) minmax(320px,.9fr)}.hospital-scene-wrap{height:470px}}
+@media(max-width:850px){.hospital-workspace,.hospital-operations{grid-template-columns:1fr}.hospital-room-panel{max-height:none}.hospital-scene-wrap{height:min(68vh,500px);min-height:380px}}
+@media(max-width:560px){.hospital-page{padding-top:12px}.hospital-heading{align-items:flex-start;flex-direction:column}.hospital-heading h1{font-size:23px}.hospital-wallet{width:100%}.hospital-wallet>span{flex:1}.hospital-level-card{align-items:flex-start;gap:9px;padding:11px}.hospital-level-medal{flex-basis:36px;height:36px}.hospital-level-tag{margin-left:auto;padding:6px 8px;font-size:7px}.hospital-level-copy>span{font-size:8px}.hospital-map-toolbar{align-items:flex-start;padding:11px}.hospital-map-toolbar span{max-width:225px;line-height:1.4}.hospital-zoom-controls{gap:3px}.hospital-zoom-controls button{width:27px;height:27px}.hospital-scene-wrap{height:420px;min-height:350px}.hospital-room-panel{padding:13px}.hospital-item-card{grid-template-columns:37px minmax(0,1fr) repeat(3,auto);gap:5px;padding:7px}.hospital-item-swatch{width:35px;height:35px}.hospital-item-copy span{font-size:7.5px}.hospital-queue,.hospital-missions{padding:11px}.hospital-queue-counts{grid-template-columns:repeat(3,minmax(0,1fr))}.hospital-patient-list{grid-template-columns:1fr}.hospital-patient-card{grid-template-columns:39px minmax(0,1fr) auto}.hospital-placement-panel>div:last-child button{flex:1}.hospital-placed-list>div{grid-template-columns:minmax(0,1fr) repeat(3,28px)}}
+@media(prefers-reduced-motion:reduce){.hospital-xp-track i,.hospital-room-chip,.hospital-upgrade-button,.hospital-start-button,.hospital-zoom-controls button{transition:none}}

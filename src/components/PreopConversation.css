@@ -1,0 +1,22 @@
+.conversation-scene{position:relative}
+.conversation-cloud-right{min-height:44px}
+.patient-avatar-wrap .character-renderer-alert .character-renderer-breathing{animation:patient-worry 1.8s ease-in-out infinite}
+.patient-avatar-wrap .character-renderer-talk .character-renderer-breathing{animation:patient-talk 1s ease-in-out infinite alternate}
+.patient-avatar-wrap .character-renderer-happy .character-renderer-breathing{animation:character-celebrate .48s ease-in-out 2}
+.trust-bars>div>span{display:flex;align-items:center;gap:4px}
+.understanding-meter i{background:linear-gradient(90deg,#9f8ae8,#6c8fe1)}
+.response-feedback{display:flex;align-items:flex-start;gap:9px;margin:12px 0;padding:11px 13px;border-radius:12px;font-size:12px;line-height:1.55}
+.response-feedback svg{flex:0 0 auto;margin-top:1px}
+.feedback-empathetic{color:#287768;background:#e8f7f1}
+.feedback-incomplete{color:#826725;background:#fff7df}
+.feedback-inappropriate{color:#945456;background:#fff0ee}
+.consent-requirements{display:grid;gap:5px;margin:0 0 12px;padding:12px 14px;border:1px solid #f0dfb8;border-radius:12px;background:#fffaf0;color:#786339;font-size:12px}
+.consent-requirements small{color:#93856d;line-height:1.45}
+.review-actions{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0}
+.review-actions button{border:1px solid #dfece8;border-radius:20px;padding:8px 12px;background:#f7fbfa;color:#39786d;font-size:11px;font-weight:700;cursor:pointer}
+.consent-options button:disabled{opacity:.48;cursor:not-allowed}
+.conversation-history{max-height:105px;overflow:auto}
+@keyframes patient-worry{0%,100%{transform:translateY(0)}50%{transform:translateY(-1.5px) rotate(-.35deg)}}
+@keyframes patient-talk{to{transform:translateY(-1px)}}
+@media(max-width:700px){.response-feedback{font-size:11px}.review-actions button{flex:1 1 auto}.conversation-history{max-height:85px}}
+@media(prefers-reduced-motion:reduce){.patient-avatar-wrap .character-renderer-alert .character-renderer-breathing,.patient-avatar-wrap .character-renderer-talk .character-renderer-breathing{animation:none}}

@@ -1,0 +1,5 @@
+.creator-footer {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+}

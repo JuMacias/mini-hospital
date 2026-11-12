@@ -1,0 +1,21 @@
+.game-tutorial-backdrop{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:18px;background:#233b354d;backdrop-filter:blur(3px)}
+.game-tutorial{width:min(100%,480px);padding:22px;border:1px solid #e6efe9;border-radius:20px;background:#fff;box-shadow:0 24px 70px #263e3538}
+.game-tutorial-header{display:flex;align-items:center;gap:12px}
+.game-tutorial-icon{display:grid;place-items:center;flex:0 0 42px;height:42px;border-radius:14px;background:#e8f7f0;color:#4b9d82}
+.game-tutorial-header>span:nth-child(2){flex:1;min-width:0}
+.game-tutorial-header small{color:#7aa995;font-size:9px;font-weight:900;letter-spacing:1px}
+.game-tutorial-header h2{margin:3px 0 0;color:#3b5653;font:900 20px/1.2 Nunito,sans-serif}
+.game-tutorial-close{display:grid;place-items:center;width:36px;height:36px;border:1px solid #e8efeb;border-radius:11px;background:#fff;color:#71857d;cursor:pointer}
+.game-tutorial>p{min-height:48px;margin:17px 0;color:#738781;font-size:13px;line-height:1.6}
+.game-tutorial-progress{display:flex;gap:5px;margin:18px 0}
+.game-tutorial-progress i{height:4px;flex:1;border-radius:5px;background:#e9efec}
+.game-tutorial-progress i.complete{background:#65bd9b}
+.game-tutorial-actions,.game-tutorial-actions>div{display:flex;align-items:center;gap:8px}
+.game-tutorial-actions{justify-content:space-between}
+.game-tutorial-actions>div{flex-wrap:wrap;justify-content:flex-end}
+.game-tutorial-secondary,.game-tutorial-primary,.game-tutorial-go{display:inline-flex;align-items:center;justify-content:center;gap:6px;min-height:38px;padding:0 12px;border:1px solid #e4ece8;border-radius:10px;background:#fff;color:#70847c;font-size:11px;font-weight:800;cursor:pointer}
+.game-tutorial-primary{border-color:#51b8ac;background:#51b8ac;color:#fff}
+.game-tutorial-go{border-color:#d6e9df;background:#f0f8f3;color:#47876e}
+.game-tutorial button:focus-visible{outline:3px solid #7bc8aa;outline-offset:2px}
+@media(max-width:520px){.game-tutorial{padding:18px}.game-tutorial-header h2{font-size:17px}.game-tutorial-actions{align-items:flex-start;flex-direction:column}.game-tutorial-actions>div{width:100%;justify-content:space-between}.game-tutorial-go{flex:1}}
+@media(prefers-reduced-motion:reduce){.game-tutorial-backdrop *{scroll-behavior:auto!important;transition:none!important;animation:none!important}}

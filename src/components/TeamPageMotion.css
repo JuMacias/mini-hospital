@@ -1,0 +1,7 @@
+.advanced-team-page .character-renderer-happy .character-arm-left{transform-box:fill-box;transform-origin:100% 0;animation:team-wave-left .38s ease-in-out 2}
+.advanced-team-page .character-renderer-happy .character-arm-right{transform-box:fill-box;transform-origin:0 0;animation:team-wave-right .38s ease-in-out 2}
+.team-professional-card.is-departing{animation:team-depart .38s ease-in both}
+@keyframes team-wave-left{0%,100%{transform:rotate(0)}50%{transform:rotate(-28deg)}}
+@keyframes team-wave-right{0%,100%{transform:rotate(0)}50%{transform:rotate(28deg)}}
+@keyframes team-depart{50%{transform:translateX(6px) scale(.96);opacity:.55}}
+@media(prefers-reduced-motion:reduce){.advanced-team-page .character-renderer *,.advanced-team-page .team-professional-card.is-departing{animation:none!important;transition:none!important}}

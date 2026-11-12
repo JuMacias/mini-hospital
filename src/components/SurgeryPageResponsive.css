@@ -1,0 +1,38 @@
+.surgery-visual {
+  border-color: #e7aa5d;
+  background: #f6eadb;
+}
+
+.surgery-scene-host {
+  background: #f6eadb;
+}
+
+@media (max-width: 760px) and (orientation: portrait) {
+  .portrait-orientation {
+    inset: auto auto 9px 9px;
+    z-index: 5;
+    flex-direction: row;
+    justify-content: flex-start;
+    gap: 5px;
+    max-width: calc(100% - 18px);
+    border: 1px solid #e8c99a;
+    border-radius: 12px;
+    padding: 5px 8px;
+    background: rgb(255 250 240 / 92%);
+    color: #80562f;
+    text-align: left;
+    pointer-events: none;
+  }
+
+  .portrait-orientation > span {
+    font-size: 16px;
+  }
+
+  .portrait-orientation b {
+    font: 800 9px Nunito, sans-serif;
+  }
+
+  .portrait-orientation small {
+    display: none;
+  }
+}

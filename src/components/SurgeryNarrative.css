@@ -1,0 +1,6 @@
+.patient-narrative-note{display:flex;align-items:flex-start;gap:9px;margin:0 0 13px;padding:11px 12px;border:1px solid #e6e9f8;border-radius:12px;background:#f6f7ff;color:#5d5f86;font-size:11px;line-height:1.45}
+.patient-narrative-note>svg{flex:0 0 auto;margin-top:1px;color:#8d82d2}
+.patient-narrative-note span{display:grid;gap:3px}
+.patient-narrative-note b{font-size:11px;color:#535681}
+.patient-narrative-worried,.patient-narrative-nervous{border-color:#f1e5c7;background:#fffaf0;color:#7f704b}
+.patient-narrative-confused{border-color:#e7dcf3;background:#faf6ff;color:#79628e}
